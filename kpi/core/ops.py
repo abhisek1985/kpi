@@ -1,0 +1,3 @@
+OPERATIONS = {
+    'CREATE_RANGE'
+}
