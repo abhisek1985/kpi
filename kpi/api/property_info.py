@@ -65,7 +65,7 @@ def visitor_stats(n, filter_col=None, typ='unique', plot_type='bar'):
     for top ```n``` values to yield the plot type of ```plot_type```.
 
     :param n: number of top values -> int
-    :param filter_col: group of values for the col and particular value -> tuple
+    :param filter_col: group of values (column and value) -> tuple
     :param typ: Type of aggregation (Unique, total, mode, max, min)
     :param plot_type: Type of the plot
     :return: Wrapper subclass type
