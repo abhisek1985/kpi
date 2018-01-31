@@ -35,5 +35,6 @@ class API(DBBuffer):
 preprocess = preprocess
 # stdout_wrap = buffer_classes.Overridden(override=sys.stdout)
 json_wrap = buffer_classes.JSONWrap
+dict_wrap = buffer_classes.DictWrap
 # csv_wrap = buffer_classes.CSVWrap(klass='CSV')
 # excel_wrap = buffer_classes.EXCELWrap(klass='EXCEL')

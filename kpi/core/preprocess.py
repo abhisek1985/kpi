@@ -48,3 +48,8 @@ def create_col(data, col_name=None, used_cols=None, operation=None, **kwargs):
                     _create_interval(data, col_name, used_cols, interval)
                     return True
     return False
+
+
+def get_percentage(data, col1, col2, new_col):
+    data[new_col] = (data[col1] - data[col2]) / data[col1] * 100
+    return True

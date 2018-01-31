@@ -12,7 +12,7 @@ class Wrapper(with_metaclass(ABCMeta)):
         if isinstance(self.override_class, TextIOWrapper):
             self.overridden = True
 
-        if klass not in ['JSON', 'CSV', 'EXCEL']:
+        if klass not in ['JSON', 'CSV', 'EXCEL', 'Dict']:
             raise NotImplementedError('Output Buffer class is unsupported!!')
 
     @abstractmethod
@@ -75,6 +75,21 @@ class JSONWrap(Wrapper):
             loads(data)
         except ValueError as e:
             raise e
+
+
+class DictWrap(Wrapper):
+    def __init__(self, override=None):
+        super(self.__class__, self).__init__(klass='Dict', override=override)
+
+    def wrap(self, functor, **kwargs):
+        """
+        The wapper class for JSON output.
+
+        :param functor: returns the pandas dataframe
+        """
+        if not callable(functor):
+            raise AttributeError('No functor is passed!')
+        return dumps(functor())
 
 
 class CSVWrap(Wrapper):
