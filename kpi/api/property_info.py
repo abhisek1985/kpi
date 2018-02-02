@@ -163,3 +163,40 @@ def property_price_stats(percents, plot_type='bar'):
         dwrap = dict_wrap(override=None)
         output = lambda: price_counts
         return True, dwrap.wrap(functor=output)
+
+
+def national_price_tally(n, national_price, filter_col=None, plot_type='bar', **kwargs):
+    """
+    Compares the price of properties to check the top ```n``` above or
+    below average prices compated to the national_prices based on the
+    filter_type to screen for a filter.
+
+    :param n: number of propeties above or below NP
+    :param national_prices: The national_price of the location
+    :param filter_col: group of values (column and value) -> tuple
+    """
+
+    # This is to see if below NP or above NP properties are taken
+    more_than_np = False
+    less_than_np = False
+    if n < 0:
+        less_than_np = True
+    else:
+        more_than_np = True
+
+    if filter_col and len(filter_col) == 2:
+        try:
+            fc = filter_col[0]
+            fv = filter_col[1]
+            data_temp = data[data[fc] == fv].copy(deep=True)
+        except KeyError:
+            raise AttributeError('filter column is not present')
+    else:
+        data_temp = data.copy(deep=True)
+    preprocess.generic_operations(
+        data_temp,
+        'listing_price',
+        'size',
+        'square_meter_price',
+        '/')
+    print(data_temp.head())

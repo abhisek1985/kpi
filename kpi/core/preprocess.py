@@ -53,3 +53,17 @@ def create_col(data, col_name=None, used_cols=None, operation=None, **kwargs):
 def get_percentage(data, col1, col2, new_col):
     data[new_col] = (data[col1] - data[col2]) / data[col1] * 100
     return True
+
+
+def generic_operations(data, col1, col2, new_col, operation):
+    if operation == '/':
+        data[new_col] = data[col1] / data[col2]
+    elif operation == '*':
+        data[new_col] = data[col1] * data[col2]
+    elif operation == '+':
+        data[new_col] = data[col1] + data[col2]
+    elif operation == '-':
+        data[new_col] = data[col1] - data[col2]
+    else:
+        err_msg = 'Operation {} is not supported yet!!'.format(operation)
+        raise NotImplementedError(err_msg)
