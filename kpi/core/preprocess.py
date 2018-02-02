@@ -56,14 +56,19 @@ def get_percentage(data, col1, col2, new_col):
 
 
 def generic_operations(data, col1, col2, new_col, operation):
+    if isinstance(col2, int):
+        col2_data = col2
+    else:
+        col2_data = data[col2]
+
     if operation == '/':
-        data[new_col] = data[col1] / data[col2]
+        data[new_col] = data[col1] / col2_data
     elif operation == '*':
-        data[new_col] = data[col1] * data[col2]
+        data[new_col] = data[col1] * col2_data
     elif operation == '+':
-        data[new_col] = data[col1] + data[col2]
+        data[new_col] = data[col1] + col2_data
     elif operation == '-':
-        data[new_col] = data[col1] - data[col2]
+        data[new_col] = data[col1] - col2_data
     else:
         err_msg = 'Operation {} is not supported yet!!'.format(operation)
         raise NotImplementedError(err_msg)

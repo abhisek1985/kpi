@@ -125,11 +125,11 @@ def visitor_stats(n, typ, filter_col=None, plot_type='bar', **kwargs):
     # jwrap = json_wrap(override=fil)
 
     # Return data for API
-    # jwrap = json_wrap(override=None)
+    jwrap = json_wrap(override=None)
 
     # pretty print data for debug
-    import sys
-    jwrap = json_wrap(override=sys.stdout)
+    # import sys
+    # jwrap = json_wrap(override=sys.stdout)
     return True, jwrap.wrap(functor=output, indent=4)
 
 
@@ -177,12 +177,9 @@ def national_price_tally(n, national_price, filter_col=None, plot_type='bar', **
     """
 
     # This is to see if below NP or above NP properties are taken
-    more_than_np = False
-    less_than_np = False
+    price_above_na = True
     if n < 0:
-        less_than_np = True
-    else:
-        more_than_np = True
+        price_above_na = False
 
     if filter_col and len(filter_col) == 2:
         try:
@@ -199,4 +196,49 @@ def national_price_tally(n, national_price, filter_col=None, plot_type='bar', **
         'size',
         'square_meter_price',
         '/')
-    print(data_temp.head())
+    data_temp['more_than_NA'] = data_temp['square_meter_price'].apply(
+        lambda x: x > national_price)
+    preprocess.generic_operations(
+        data_temp,
+        'square_meter_price',
+        national_price,
+        'per_below_above_NA_temp',
+        '-')
+    preprocess.generic_operations(
+        data_temp,
+        'per_below_above_NA_temp',
+        national_price * 100,
+        'per_below_above_NA',
+        '/')
+    data_temp.drop(
+        ['per_below_above_NA_temp'],
+        axis=1,
+        inplace=True)
+
+    if price_above_na:
+        ret_data = data_temp[data_temp['more_than_NA'] == True]
+    else:
+        ret_data = data_temp[data_temp['more_than_NA'] == False]
+
+    if ret_data.shape[0] == 0:
+        dwrap = dict_wrap(override=None)
+        output = lambda: {}
+        return True, dwrap.wrap(functor=output)
+
+    if abs(n) > ret_data.shape[0]:
+        msg = "{} is a invalid number of rows to return".format(n)
+        raise_(ValueError, ValueError(msg))
+    else:
+        ascend = not price_above_na
+        ret_data.sort_values(
+            by='per_below_above_NA',
+            inplace=True,
+            ascending=ascend)
+        ret_data = ret_data[['id', 'per_below_above_NA']].head(n)
+        if plot_type == 'bar':
+            ret_data.set_index('id', inplace=True)
+            output = lambda: ret_data.reset_index(drop=True)
+        else:
+            return False, None
+        jwrap = json_wrap(override=None)
+        return True, jwrap.wrap(functor=output, indent=4)
