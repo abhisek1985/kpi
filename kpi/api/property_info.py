@@ -165,7 +165,12 @@ def property_price_stats(percents, plot_type='bar'):
         return True, dwrap.wrap(functor=output)
 
 
-def national_price_tally(n, national_price, filter_col=None, plot_type='bar', **kwargs):
+def national_price_tally(
+    n,
+    national_price,
+    filter_col=None,
+    plot_type='bar',
+    **kwargs):
     """
     Compares the price of properties to check the top ```n``` above or
     below average prices compated to the national_prices based on the
@@ -242,3 +247,96 @@ def national_price_tally(n, national_price, filter_col=None, plot_type='bar', **
             return False, None
         jwrap = json_wrap(override=None)
         return True, jwrap.wrap(functor=output, indent=4)
+
+
+def property_discounts(
+    n,
+    filter_col=None,
+    typ='aggregated',
+    focus='location',
+    plot_type='bar'):
+    """
+    Calculates the discounts offered by for different properties
+    and returns the top ```n``` properties. It also can take
+    ```filter_col``` as a tuple and filter the data according
+    to the mentioned column and given value and then perform the
+    discount calculations. This can be used to filter seller specific
+    data.
+
+    It supports the discount analysis focused on either **property_id**
+    or on **location** as mentioned by ```focus```.
+
+    For focus on location, it can either performed **aggregated** per location
+    analysis or **indivisual** discount oriented analysis as
+    mentioned by ```typ```.
+
+    :param n: Top n values. -> int
+    :param filter_col: Filtering criteria -> tuple
+    :param typ: Analysis type for focus on location -> str
+    :paran focus: Focus for either location or property -> str
+    :param plot_type: Plotting type data munging -> str
+    """
+    if typ not in ['aggregated', 'indivisual']:
+        raise NotImplementedError('{} type is not implemented yet'.format(typ))
+    if focus not in ['location', 'property']:
+        raise NotImplementedError('{} focus is not implemented'.format(focus))
+    if n <= 0:
+        raise ValueError('{} n value is not valid'.format(n))
+    if filter_col and len(filter_col) == 2:
+        try:
+            fc = filter_col[0]
+            fv = filter_col[1]
+            data_temp = data[data[fc] == fv].copy(deep=True)
+        except KeyError:
+            raise AttributeError('filter column is not present')
+    else:
+        data_temp = data.copy(deep=True)
+
+    if focus == 'location':
+        preprocess.generic_operations(
+            data_temp,
+            'bank_price',
+            'listing_price',
+            'Sale',
+            '-')
+        if typ == 'aggregated':
+            data_temp['Sale'] = data_temp['Sale'].apply(
+                lambda x: 0 if x < 0 else x / data_temp.Sale.max())
+            discount = data_temp.groupby('location').Sale.sum()
+            discount.sort_values(ascending=False, inplace=True)
+            data_temp = discount.reset_index()
+            data_temp.columns = ['Location', 'Discount Rate']
+            data_temp = data_temp.reset_index(drop=True).set_index('Location')
+        elif typ == 'indivisual':
+            data_temp['Sale'] = data_temp['Sale'].apply(
+                lambda x: 0 if x < 0 else x)
+            data_temp = data_temp[['id', 'location', 'Sale']]
+            data_temp.sort_values(by='Sale', ascending=False, inplace=True)
+            data_temp.columns = ['property_id', 'Location', 'Discount Price']
+            data_temp = data_temp.reset_index(drop=True).set_index(
+                'property_id')
+    elif focus == 'property':
+        data_temp = data_temp[data_temp.bank_certification == 1]
+        preprocess.generic_operations(
+            data_temp,
+            'bank_price',
+            'listing_price',
+            'price_gap',
+            '-')
+        data_temp.sort_values('price_gap', ascending=False, inplace=True)
+        data_temp = data_temp[['id', 'price_gap']]
+        data_temp = data_temp.reset_index(drop=True).set_index('id')
+
+    if data_temp.shape[0] == 0:
+        dwrap = dict_wrap(override=None)
+        output = lambda: {}
+        return True, dwrap.wrap(functor=output)
+    elif data_temp.shape[0] < n:
+        raise AttributeError('{} n is too high'.format(n))
+
+    if plot_type == 'bar':
+        output = lambda: data_temp.head(n=n)
+        jwrap = json_wrap(override=None)
+        return True, jwrap.wrap(functor=output, indent=4)
+    else:
+        return False, None
