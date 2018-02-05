@@ -19,7 +19,7 @@ def _create_interval(data, col_name, used_cols, step):
     min_val = _round_off_10k(data_strip.min())
     interval = np.arange(min_val, max_val + min_val, step)
     bins = zip(interval, interval[1::])
-    bins_text = [*map(lambda x: f"{x[0]} to {x[1]}", bins)]
+    bins_text = [*map(lambda x: "{} to {}".format(x[0],x[1]), bins)]
     new_col_data = pd.cut(
         data.listing_price,
         bins=interval,
@@ -43,7 +43,7 @@ def create_col(data, col_name=None, used_cols=None, operation=None, **kwargs):
             if operation == 'CREATE_RANGE':
                 interval = kwargs.get('interval', None)
                 if interval is None:
-                    raise ValueError(f'Interval {operation} can not be none')
+                    raise ValueError('Interval {} can not be none'.format(operation))
                 else:
                     _create_interval(data, col_name, used_cols, interval)
                     return True
