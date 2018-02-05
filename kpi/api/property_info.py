@@ -1,3 +1,17 @@
+"""
+__author__ = "Mayukh Sarkar"
+__date__ = "5th February, 2018"
+__description__ = "Module is helpful to all the major APIs for
+                   property listings and their related analysis
+                   Please refer below the usage scenarios to see
+                   the usage of different APIs. For more detailed info,
+                   please follow the documentation"
+
+__usage__ = "
+    # // TODO Add later on
+"
+"""
+
 from .api_base import preprocess
 from .api_base import API
 from .api_base import json_wrap, dict_wrap
@@ -221,9 +235,9 @@ def national_price_tally(
         inplace=True)
 
     if price_above_na:
-        ret_data = data_temp[data_temp['more_than_NA'] == True]
+        ret_data = data_temp[data_temp['more_than_NA'] == 1]
     else:
-        ret_data = data_temp[data_temp['more_than_NA'] == False]
+        ret_data = data_temp[data_temp['more_than_NA'] == 0]
 
     if ret_data.shape[0] == 0:
         dwrap = dict_wrap(override=None)
