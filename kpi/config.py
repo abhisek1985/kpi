@@ -1,10 +1,8 @@
 """
 
 """
-import configparser
+from six.moves import configparser
 import os
-from inspect import getfile, currentframe
-
 
 class ConfigParser:
     """
@@ -14,15 +12,14 @@ class ConfigParser:
 
     def __init__(self, config_file):
         """
-
         :param config_file:
         """
-        PWD = os.path.dirname(os.path.abspath(getfile(currentframe())))
-        if os.path.exists(PWD + '/' + config_file):
-            ConfigParser.conf.read(PWD + '/' + config_file)
-        else:
-            raise OSError('Config file is not present')
-
+        # PWD = os.path.dirname(os.path.abspath(getfile(currentframe())))
+        # if os.path.exists(PWD + '/' + config_file):
+        #     ConfigParser.conf.read(PWD + '/' + config_file)
+        # else:
+        #     raise OSError('Config file is not present')
+        ConfigParser.conf.read(config_file)
         if len(ConfigParser.conf.sections()) != 3:
             raise ValueError('Unnecessary values in config file')
 
@@ -47,6 +44,9 @@ class ConfigParser:
                 raise ValueError('Authentication settings to API is not found')
             else:
                 self.logfile = ConfigParser.conf['LOG'].get('log', 'api.log')
+        debug = ConfigParser.conf['DEFAULT'].get('Debug_Mode', 'false')
+        os.environ['DEBUG'] = debug
+        # print(os.environ['DEBUG'])
 
     @property
     def dbinfo(self):

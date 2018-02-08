@@ -3,3 +3,5 @@ __pycache__/
 .idea/
 kpi.sublime-project
 kpi.sublime-workspace
+kpi.egg-info/
+logs/

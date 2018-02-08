@@ -13,6 +13,7 @@ from ..core import preprocess
 from ..IO import buffer_classes
 
 
+
 class API(DBBuffer):
     """
     The main API class that would
@@ -30,7 +31,6 @@ class API(DBBuffer):
         super(self.__class__, self).__init__()
         if base not in ['django', 'flask']:
             raise ValueError('Endpoint is not supported yet!!')
-
 
 preprocess = preprocess
 # stdout_wrap = buffer_classes.Overridden(override=sys.stdout)

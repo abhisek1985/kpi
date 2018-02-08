@@ -1,5 +1,7 @@
 from .mysql import MySQL
 from .config import ConfigParser
+from .constants import CONFIG
+import os
 
 
 def parse_config(config_file):
@@ -22,15 +24,15 @@ def get_parser_info(database_info):
 
 
 class DBBuffer:
-    def __init__(self, config='config.ini'):
-        parser = parse_config(config)
+    def __init__(self):
+        parser = parse_config(CONFIG)
         self.db_info = get_parser_info(database_info=parser.dbinfo)
 
     def custom_read(self, rows, cols, return_type, table):
         empty_rows = not rows or rows == ()
         empty_cols = not cols or cols == ()
-        return_type == 'DataFrame'
-        if all([empty_rows, empty_cols, return_type]):
+        # return_type == 'DataFrame'
+        if all([empty_rows, empty_cols, return_type == 'DataFrame']):
             return self[table]
         return self.db_info.read(
             rows=rows,

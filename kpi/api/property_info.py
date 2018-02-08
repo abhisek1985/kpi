@@ -16,10 +16,22 @@ from .api_base import preprocess
 from .api_base import API
 from .api_base import json_wrap, dict_wrap
 from six import reraise as raise_
+from functools import wraps
 
-data = API(base='django')['property_analytics']  # pandas.DataFrame
+data = None
+def get_data(table):
+    def _get_data(func):
+        def wrapper(*args, **kwargs):
+            global data
+            print('Hello')
+            if not data:
+                data = API(base='django')[table]  # pandas.DataFrame
+            return func(*args, **kwargs)
+        return wraps(func)(wrapper)
+    return _get_data
 
 
+@get_data('property_analytics')
 def number_of_properties(group, category=None, plot='heatmap'):
     """
     Finds number of properties for
@@ -70,7 +82,7 @@ def number_of_properties(group, category=None, plot='heatmap'):
         # jwrap = json_wrap(override=sys.stdout)
         return True, jwrap.wrap(functor=output, indent=4)
 
-
+@get_data('property_analytics')
 def visitor_stats(n, typ, filter_col=None, plot_type='bar'):
     """
     This first filter the data according to the ```filter``` column
@@ -146,6 +158,7 @@ def visitor_stats(n, typ, filter_col=None, plot_type='bar'):
     return True, jwrap.wrap(functor=output, indent=4)
 
 
+@get_data('property_analytics')
 def property_price_stats(percents, plot_type='bar'):
     """
     # // TODO __doc__ later on
@@ -181,7 +194,7 @@ def property_price_stats(percents, plot_type='bar'):
         output = lambda: {}
         return True, dwrap.wrap(functor=output)
 
-
+@get_data('property_analytics')
 def national_price_tally(
         n,
         national_price,
@@ -265,7 +278,7 @@ def national_price_tally(
         jwrap = json_wrap(override=None)
         return True, jwrap.wrap(functor=output, indent=4)
 
-
+@get_data('property_analytics')
 def property_discounts(
         n,
         filter_col=None,

@@ -19,7 +19,7 @@ def _create_interval(data, col_name, used_cols, step):
     min_val = _round_off_10k(data_strip.min())
     interval = np.arange(min_val, max_val + min_val, step)
     bins = zip(interval, interval[1::])
-    bins_text = [*map(lambda x: "{} to {}".format(x[0],x[1]), bins)]
+    bins_text = list(map(lambda x: "{} to {}".format(x[0],x[1]), bins))
     new_col_data = pd.cut(
         data.listing_price,
         bins=interval,
