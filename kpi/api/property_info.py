@@ -17,7 +17,6 @@ from .api_base import API
 from .api_base import json_wrap, dict_wrap
 from six import reraise as raise_
 
-
 data = API(base='django')['property_analytics']  # pandas.DataFrame
 
 
@@ -72,10 +71,10 @@ def number_of_properties(group, category=None, plot='heatmap'):
         return True, jwrap.wrap(functor=output, indent=4)
 
 
-def visitor_stats(n, typ, filter_col=None, plot_type='bar', **kwargs):
+def visitor_stats(n, typ, filter_col=None, plot_type='bar'):
     """
     This first filter the data according to the ```filter``` column
-    and then find the indivisual property statistics of type ```typ```
+    and then find the individual property statistics of type ```typ```
     for top ```n``` values to yield the plot type of ```plot_type```.
 
     :param n: number of top values -> int
@@ -153,45 +152,49 @@ def property_price_stats(percents, plot_type='bar'):
     """
     if len(percents) < 2:
         return False, None
-
-    if preprocess.get_percentage(
-        data,
-        'bank_price',
-        'listing_price',
-        'sold_below_bank'):
-        data_temp = data[data['sold_below_bank'] >= 0].copy(deep=True)
-        price_counts = dict()
-        low = percents[0]
-        high = percents[-1]
-        price_below = data_temp[data_temp['sold_below_bank'] <= low].shape[0]
-        price_above = data_temp[data_temp['sold_below_bank'] >= high].shape[0]
-        for i in range(len(percents) - 1):
-            curr = percents[i]
-            nxt = percents[i + 1]
-            key = 'price_' + str(curr) + '_to_' + str(nxt)
-            low_cond = data_temp['sold_below_bank'] >= curr
-            high_cond = data_temp['sold_below_bank'] <= nxt
-            price_counts[key] = data_temp[low_cond & high_cond].shape[0]
-        price_counts['price_below_' + str(low)] = price_below
-        price_counts['price_above_' + str(high)] = price_above
+    if plot_type == 'bar':
+        if preprocess.get_percentage(
+                data,
+                'bank_price',
+                'listing_price',
+                'sold_below_bank'):
+            data_temp = data[data['sold_below_bank'] >= 0].copy(deep=True)
+            price_counts = dict()
+            low = percents[0]
+            high = percents[-1]
+            price_below = data_temp[data_temp['sold_below_bank'] <= low].shape[0]
+            price_above = data_temp[data_temp['sold_below_bank'] >= high].shape[0]
+            for i in range(len(percents) - 1):
+                curr = percents[i]
+                nxt = percents[i + 1]
+                key = 'price_' + str(curr) + '_to_' + str(nxt)
+                low_cond = data_temp['sold_below_bank'] >= curr
+                high_cond = data_temp['sold_below_bank'] <= nxt
+                price_counts[key] = data_temp[low_cond & high_cond].shape[0]
+            price_counts['price_below_' + str(low)] = price_below
+            price_counts['price_above_' + str(high)] = price_above
+            dwrap = dict_wrap(override=None)
+            output = lambda: price_counts
+            return True, dwrap.wrap(functor=output)
+    else:
         dwrap = dict_wrap(override=None)
-        output = lambda: price_counts
+        output = lambda: {}
         return True, dwrap.wrap(functor=output)
 
 
 def national_price_tally(
-    n,
-    national_price,
-    filter_col=None,
-    plot_type='bar',
-    **kwargs):
+        n,
+        national_price,
+        filter_col=None,
+        plot_type='bar'):
     """
     Compares the price of properties to check the top ```n``` above or
-    below average prices compated to the national_prices based on the
+    below average prices compared to the national_prices based on the
     filter_type to screen for a filter.
 
-    :param n: number of propeties above or below NP
-    :param national_prices: The national_price of the location
+    :param plot_type: Plotting type
+    :param n: number of properties above or below NP
+    :param national_price: The national_price of the location
     :param filter_col: group of values (column and value) -> tuple
     """
 
@@ -264,11 +267,11 @@ def national_price_tally(
 
 
 def property_discounts(
-    n,
-    filter_col=None,
-    typ='aggregated',
-    focus='location',
-    plot_type='bar'):
+        n,
+        filter_col=None,
+        typ='aggregated',
+        focus='location',
+        plot_type='bar'):
     """
     Calculates the discounts offered by for different properties
     and returns the top ```n``` properties. It also can take
@@ -287,10 +290,10 @@ def property_discounts(
     :param n: Top n values. -> int
     :param filter_col: Filtering criteria -> tuple
     :param typ: Analysis type for focus on location -> str
-    :paran focus: Focus for either location or property -> str
+    :param focus: Focus for either location or property -> str
     :param plot_type: Plotting type data munging -> str
     """
-    if typ not in ['aggregated', 'indivisual']:
+    if typ not in ['aggregated', 'individual']:
         raise NotImplementedError('{} type is not implemented yet'.format(typ))
     if focus not in ['location', 'property']:
         raise NotImplementedError('{} focus is not implemented'.format(focus))
@@ -321,7 +324,7 @@ def property_discounts(
             data_temp = discount.reset_index()
             data_temp.columns = ['Location', 'Discount Rate']
             data_temp = data_temp.reset_index(drop=True).set_index('Location')
-        elif typ == 'indivisual':
+        elif typ == 'individual':
             data_temp['Sale'] = data_temp['Sale'].apply(
                 lambda x: 0 if x < 0 else x)
             data_temp = data_temp[['id', 'location', 'Sale']]
