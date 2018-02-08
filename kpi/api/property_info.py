@@ -63,11 +63,11 @@ def number_of_properties(group, category=None, plot='heatmap'):
         # jwrap = json_wrap(override=fil)
 
         # Return data for API
-        # jwrap = json_wrap(override=None)
+        jwrap = json_wrap(override=None)
 
         # pretty print data for debug
-        import sys
-        jwrap = json_wrap(override=sys.stdout)
+        # import sys
+        # jwrap = json_wrap(override=sys.stdout)
         return True, jwrap.wrap(functor=output, indent=4)
 
 

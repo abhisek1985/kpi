@@ -22,7 +22,7 @@ class MySQL(Database):
         :param table: Name of the table
         :return list: Returns the list of column values
         """
-        self.cursor.execute(f"DESC {table};")
+        self.cursor.execute("DESC {};".format(table))
         table_desc = self.cursor.fetchall()
         return map(lambda x: x[0], table_desc)
 
@@ -35,9 +35,9 @@ class MySQL(Database):
         """
         select = "SELECT count(*) FROM INFORMATION_SCHEMA.COLUMNS"
         condition = " WHERE table_schema = "
-        clause = f"'{self.dbname}' AND table_name = '{table}';"
+        clause = "'{}' AND table_name = '{}';".format(self.dbname, table)
         count = select + condition + clause
-        self.cursor.execute(f"SELECT COUNT(*) FROM {self.dbname}.{table};")
+        self.cursor.execute("SELECT COUNT(*) FROM {}.{};".format(self.dbname,table))
         n_rows = self.cursor.fetchall()
         self.cursor.execute(count)
         n_cols = self.cursor.fetchall()
@@ -57,7 +57,7 @@ class MySQL(Database):
         :param how: Reading type
         :return: iterator or data copy
         """
-        self.cursor.execute(f"SELECT * FROM {table};")
+        self.cursor.execute("SELECT * FROM {};".format(table))
         if how == 'optimised':
             return self.cursor.fetchall_unbuffered()
         else:
