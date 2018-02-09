@@ -11,7 +11,8 @@ unless it is absolutely known.
 from ..dispatch import DBBuffer
 from ..core import preprocess
 from ..IO import buffer_classes
-from ..constants import Constants
+import pandas as pd
+
 
 class API(DBBuffer):
     """
@@ -31,10 +32,24 @@ class API(DBBuffer):
         if base not in ['django', 'flask']:
             raise ValueError('Endpoint is not supported yet!!')
 
-__DEBUG__ = Constants.DEBUG
+
 preprocess = preprocess
 # stdout_wrap = buffer_classes.Overridden(override=sys.stdout)
 json_wrap = buffer_classes.JSONWrap
 dict_wrap = buffer_classes.DictWrap
 # csv_wrap = buffer_classes.CSVWrap(klass='CSV')
 # excel_wrap = buffer_classes.EXCELWrap(klass='EXCEL')
+
+
+class GetData:
+    data = None
+
+    def __init__(self, table):
+        self.table = table
+
+    def __call__(self, func):
+        def wrapper(*args):
+            if not isinstance(GetData.data, pd.DataFrame):
+                GetData.data = API(base='django')[self.table]
+            return func(*args)
+        return wrapper
