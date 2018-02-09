@@ -63,7 +63,8 @@ def number_of_properties(group, category=None, plot_type='heatmap'):
     # Check if the category is already present or not
     else:
         if Constants.DEBUG:
-            print('Mentioned group {} is not good. Try using price_range'.format(group))
+            msg = 'Bad mentioned group {}. Try using price_range'.format(group)
+            raise_(ValueError, ValueError(msg))
         return False, None
     if category not in data.columns.values:
         if Constants.DEBUG:
@@ -133,7 +134,6 @@ def visitor_stats(n, typ, filter_col=None, plot_type='bar'):
             raise_(ValueError, ValueError(msg))
         else:
             return False, None
-        # raise ValueError("{} is a invalid aggregate function".format(typ))
     else:
         typ = typ.lower()
 
@@ -203,11 +203,25 @@ def visitor_stats(n, typ, filter_col=None, plot_type='bar'):
 @get_data('property_analytics')
 def property_price_stats(percents, plot_type='bar'):
     """
-    # // TODO __doc__ later on
+    This calculates the percentages of the properties
+    that are sold below the bank prices. There must be
+    atleast two values of percentages present. It works
+    like the following way.
+
+    For percents = [20, 50]
+
+        It calculates
+            1. Properties being sold below 20% bank value
+            2. Propeties being sold between 20% to 50% bank value
+            3. Properties being sold above 50% the bank value
+
+    :param percents: percentage values -> list
+    :param plot_type: Plot type -> str
     """
     if len(percents) < 2:
         if Constants.DEBUG:
-           print('Minimum 2 percentages should be given')
+            msg = 'Minimum 2 percentages should be given'
+            raise_(AttributeError, AttributeError(msg))
         return False, None
 
     if plot_type == 'bar':
@@ -220,8 +234,9 @@ def property_price_stats(percents, plot_type='bar'):
             price_counts = dict()
             low = percents[0]
             high = percents[-1]
-            price_below = data_temp[data_temp['sold_below_bank'] <= low].shape[0]
-            price_above = data_temp[data_temp['sold_below_bank'] >= high].shape[0]
+            sbb = data_temp['sold_below_bank']
+            price_below = data_temp[sbb <= low].shape[0]
+            price_above = data_temp[sbb >= high].shape[0]
             for i in range(len(percents) - 1):
                 curr = percents[i]
                 nxt = percents[i + 1]
@@ -481,6 +496,6 @@ def property_discounts(
             return True, jwrap.wrap(functor=output, indent=4)
     else:
         if Constants.DEBUG:
-            msg = 'Mentioned plot type {} is not supported yet'.format(plot_type)
+            msg = 'Plot type {} is not supported yet'.format(plot_type)
             raise_(NotImplementedError, NotImplementedError(msg))
         return False, None
