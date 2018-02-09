@@ -1,7 +1,6 @@
 from .mysql import MySQL
 from .config import ConfigParser
-from .constants import CONFIG
-import os
+from .constants import CONFIG, Constants
 
 
 def parse_config(config_file):
@@ -27,6 +26,7 @@ class DBBuffer:
     def __init__(self):
         parser = parse_config(CONFIG)
         self.db_info = get_parser_info(database_info=parser.dbinfo)
+        Constants(configClass=ConfigParser)
 
     def custom_read(self, rows, cols, return_type, table):
         empty_rows = not rows or rows == ()

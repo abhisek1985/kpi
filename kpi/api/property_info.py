@@ -15,16 +15,19 @@ __usage__ = "
 from .api_base import preprocess
 from .api_base import API
 from .api_base import json_wrap, dict_wrap
+from ..constants import Constants
 from six import reraise as raise_
 from functools import wraps
 
 data = None
+
+
 def get_data(table):
     def _get_data(func):
         def wrapper(*args, **kwargs):
+            import pandas as pd
             global data
-            print('Hello')
-            if not data:
+            if not isinstance(data, pd.DataFrame):
                 data = API(base='django')[table]  # pandas.DataFrame
             return func(*args, **kwargs)
         return wraps(func)(wrapper)
@@ -32,7 +35,7 @@ def get_data(table):
 
 
 @get_data('property_analytics')
-def number_of_properties(group, category=None, plot='heatmap'):
+def number_of_properties(group, category=None, plot_type='heatmap'):
     """
     Finds number of properties for
     each category grouped by the group
@@ -54,13 +57,21 @@ def number_of_properties(group, category=None, plot='heatmap'):
                 interval=1000000
             )
             if not success:
+                if Constants.DEBUG:
+                    print('Create Column operation was not successful')
                 return False, None
     # Check if the category is already present or not
+    else:
+        if Constants.DEBUG:
+            print('Mentioned group {} is not good. Try using price_range'.format(group))
+        return False, None
     if category not in data.columns.values:
+        if Constants.DEBUG:
+            print('Category column is not present in the table')
         return False, None
 
     # Currently only 'heatmap' is supported
-    if plot == 'heatmap':
+    if plot_type == 'heatmap':
         searches = data.groupby([group, category]).count().reset_index()
         search_data = searches.iloc[:, 0:3]
         search_data.columns = ['Price Range', 'Locations', 'count']
@@ -75,12 +86,20 @@ def number_of_properties(group, category=None, plot='heatmap'):
         # jwrap = json_wrap(override=fil)
 
         # Return data for API
-        jwrap = json_wrap(override=None)
-
+        if not Constants.DEBUG:
+            jwrap = json_wrap(override=None)
+            return True, jwrap.wrap(functor=output, indent=4)
         # pretty print data for debug
-        # import sys
-        # jwrap = json_wrap(override=sys.stdout)
-        return True, jwrap.wrap(functor=output, indent=4)
+        else:
+            import sys
+            jwrap = json_wrap(override=sys.stdout)
+            print(jwrap.wrap(functor=output, indent=4))
+            return True, None
+    else:
+        if Constants.DEBUG:
+            print('Plot type {} is not supported'.format(plot_type))
+        return False, None
+
 
 @get_data('property_analytics')
 def visitor_stats(n, typ, filter_col=None, plot_type='bar'):
@@ -95,22 +114,31 @@ def visitor_stats(n, typ, filter_col=None, plot_type='bar'):
     :param plot_type: Type of the plot
     :return: Status and Wrapper subclass type
     """
+    data_temp = None
     if filter_col and len(filter_col) == 2:
         try:
             fc = filter_col[0]
             fv = filter_col[1]
             data_temp = data[data[fc] == fv].copy(deep=True)
         except KeyError:
-            raise AttributeError('filter column is not present')
-    else:
-        data_temp = data.copy(deep=True)
+            if Constants.DEBUG:
+                msg = 'filter column {} is not present'.format(filter_col[0])
+                raise_(AttributeError, AttributeError(msg))
+            else:
+                return False, None
 
     if typ.lower() not in ['unique', 'leads']:
-        msg = "{} is a invalid aggregate function".format(typ)
-        raise_(ValueError, ValueError(msg))
+        if Constants.DEBUG:
+            msg = "{} is a invalid aggregate function".format(typ)
+            raise_(ValueError, ValueError(msg))
+        else:
+            return False, None
         # raise ValueError("{} is a invalid aggregate function".format(typ))
     else:
         typ = typ.lower()
+
+    if data_temp is None:
+        data_temp = data.copy(deep=True)
 
     if typ == 'unique':
         data_temp.sort_values(
@@ -130,18 +158,27 @@ def visitor_stats(n, typ, filter_col=None, plot_type='bar'):
         data_temp.columns = ['property_id', 'user_actions']
 
     if n > data_temp.shape[0] or n < 0:
-        msg = "{} is a invalid number of rows to return".format(n)
-        raise_(ValueError, ValueError(msg))
+        if Constants.DEBUG:
+            msg = "{} is a invalid number of rows to return".format(n)
+            raise_(ValueError, ValueError(msg))
+        else:
+            return False, None
     else:
         data_temp = data_temp.head(n=n)
 
     if data_temp.shape[0] == 0:
-        return False, None
+        if Constants.DEBUG:
+            print('The return operation has no entries')
+        dwrap = dict_wrap(override=None)
+        output = lambda: {}
+        return True, dwrap.wrap(functor=output)
 
     if plot_type == 'bar':
         data_temp.set_index('property_id', inplace=True)
         output = lambda: data_temp.reset_index(drop=True)
     else:
+        if Constants.DEBUG:
+            print('Plotting type {} is not supported'.format(plot_type))
         return False, None
     # Wrap into a wrapper class and return with status
 
@@ -150,12 +187,17 @@ def visitor_stats(n, typ, filter_col=None, plot_type='bar'):
     # jwrap = json_wrap(override=fil)
 
     # Return data for API
-    jwrap = json_wrap(override=None)
-
+    if Constants.DEBUG:
+        jwrap = json_wrap(override=None)
+        return True, jwrap.wrap(functor=output, indent=4)
+    else:
+        import sys
+        jwrap = json_wrap(override=sys.stdout)
+        print(jwrap.wrap(functor=output, indent=4))
+        return True, None
     # pretty print data for debug
     # import sys
     # jwrap = json_wrap(override=sys.stdout)
-    return True, jwrap.wrap(functor=output, indent=4)
 
 
 @get_data('property_analytics')
@@ -164,7 +206,10 @@ def property_price_stats(percents, plot_type='bar'):
     # // TODO __doc__ later on
     """
     if len(percents) < 2:
+        if Constants.DEBUG:
+           print('Minimum 2 percentages should be given')
         return False, None
+
     if plot_type == 'bar':
         if preprocess.get_percentage(
                 data,
@@ -186,13 +231,22 @@ def property_price_stats(percents, plot_type='bar'):
                 price_counts[key] = data_temp[low_cond & high_cond].shape[0]
             price_counts['price_below_' + str(low)] = price_below
             price_counts['price_above_' + str(high)] = price_above
-            dwrap = dict_wrap(override=None)
-            output = lambda: price_counts
-            return True, dwrap.wrap(functor=output)
+            if not Constants.DEBUG:
+                dwrap = dict_wrap(override=None)
+                output = lambda: price_counts
+                return True, dwrap.wrap(functor=output)
+            else:
+                print(price_counts)
+                return True, None
     else:
-        dwrap = dict_wrap(override=None)
-        output = lambda: {}
-        return True, dwrap.wrap(functor=output)
+        if not Constants.DEBUG:
+            dwrap = dict_wrap(override=None)
+            output = lambda: {}
+            return True, dwrap.wrap(functor=output)
+        else:
+            print({})
+            return True, None
+
 
 @get_data('property_analytics')
 def national_price_tally(
@@ -215,15 +269,20 @@ def national_price_tally(
     price_above_na = True
     if n < 0:
         price_above_na = False
-
+    data_temp = None
     if filter_col and len(filter_col) == 2:
         try:
             fc = filter_col[0]
             fv = filter_col[1]
             data_temp = data[data[fc] == fv].copy(deep=True)
         except KeyError:
-            raise AttributeError('filter column is not present')
-    else:
+            if Constants.DEBUG:
+                msg = 'filter column {} is not present'.format(filter_col[0])
+                raise_(AttributeError, AttributeError(msg))
+            else:
+                return False, None
+
+    if data_temp is None:
         data_temp = data.copy(deep=True)
     preprocess.generic_operations(
         data_temp,
@@ -256,13 +315,18 @@ def national_price_tally(
         ret_data = data_temp[data_temp['more_than_NA'] == 0]
 
     if ret_data.shape[0] == 0:
+        if Constants.DEBUG:
+            print('Operation returned no values')
         dwrap = dict_wrap(override=None)
         output = lambda: {}
         return True, dwrap.wrap(functor=output)
 
     if abs(n) > ret_data.shape[0]:
-        msg = "{} is a invalid number of rows to return".format(n)
-        raise_(ValueError, ValueError(msg))
+        if Constants.DEBUG:
+            msg = "{} is a invalid number of rows to return".format(n)
+            raise_(ValueError, ValueError(msg))
+        else:
+            return False, None
     else:
         ascend = not price_above_na
         ret_data.sort_values(
@@ -270,13 +334,23 @@ def national_price_tally(
             inplace=True,
             ascending=ascend)
         ret_data = ret_data[['id', 'per_below_above_NA']].head(n)
+
         if plot_type == 'bar':
             ret_data.set_index('id', inplace=True)
             output = lambda: ret_data.reset_index(drop=True)
         else:
+            if Constants.DEBUG:
+                print('Plot type {} is not supported'.format(plot_type))
             return False, None
-        jwrap = json_wrap(override=None)
-        return True, jwrap.wrap(functor=output, indent=4)
+        if not Constants.DEBUG:
+            jwrap = json_wrap(override=None)
+            return True, jwrap.wrap(functor=output, indent=4)
+        else:
+            import sys
+            jwrap = json_wrap(override=sys.stdout)
+            print(jwrap.wrap(functor=output, indent=4))
+            return True, None
+
 
 @get_data('property_analytics')
 def property_discounts(
@@ -297,7 +371,7 @@ def property_discounts(
     or on **location** as mentioned by ```focus```.
 
     For focus on location, it can either performed **aggregated** per location
-    analysis or **indivisual** discount oriented analysis as
+    analysis or **individual** discount oriented analysis as
     mentioned by ```typ```.
 
     :param n: Top n values. -> int
@@ -307,19 +381,35 @@ def property_discounts(
     :param plot_type: Plotting type data munging -> str
     """
     if typ not in ['aggregated', 'individual']:
-        raise NotImplementedError('{} type is not implemented yet'.format(typ))
+        if Constants.DEBUG:
+            msg = '{} type is not implemented yet'.format(typ)
+            raise_(NotImplementedError, NotImplementedError(msg))
+        return False, None
+
     if focus not in ['location', 'property']:
-        raise NotImplementedError('{} focus is not implemented'.format(focus))
+        if Constants.DEBUG:
+            msg = '{} focus is not implemented'.format(focus)
+            raise_(NotImplementedError, NotImplementedError(msg))
+        return False, None
+
     if n <= 0:
-        raise ValueError('{} n value is not valid'.format(n))
+        if Constants.DEBUG:
+            msg = '{} n value is not valid'.format(n)
+            raise_(ValueError, ValueError(msg))
+        return False, None
+    data_temp = None
     if filter_col and len(filter_col) == 2:
         try:
             fc = filter_col[0]
             fv = filter_col[1]
             data_temp = data[data[fc] == fv].copy(deep=True)
         except KeyError:
-            raise AttributeError('filter column is not present')
-    else:
+            if Constants.DEBUG:
+                msg = 'filter column {} is not present'.format(filter_col[0])
+                raise_(AttributeError, AttributeError(msg))
+            return False, None
+
+    if data_temp is None:
         data_temp = data.copy(deep=True)
 
     if focus == 'location':
@@ -345,6 +435,11 @@ def property_discounts(
             data_temp.columns = ['property_id', 'Location', 'Discount Price']
             data_temp = data_temp.reset_index(drop=True).set_index(
                 'property_id')
+        else:
+            if Constants.DEBUG:
+                msg = 'Type {} is not implemented'.format(typ)
+                raise_(NotImplementedError, NotImplementedError(msg))
+            return False, None
     elif focus == 'property':
         data_temp = data_temp[data_temp.bank_certification == 1]
         preprocess.generic_operations(
@@ -356,17 +451,36 @@ def property_discounts(
         data_temp.sort_values('price_gap', ascending=False, inplace=True)
         data_temp = data_temp[['id', 'price_gap']]
         data_temp = data_temp.reset_index(drop=True).set_index('id')
+    else:
+        if Constants.DEBUG:
+            msg = 'Focus {} is not supported yet'.format(focus)
+            raise_(NotImplementedError, NotImplementedError(msg))
+        return False, None
 
     if data_temp.shape[0] == 0:
+        if Constants.DEBUG:
+            print('Operation returned no data')
         dwrap = dict_wrap(override=None)
         output = lambda: {}
         return True, dwrap.wrap(functor=output)
     elif data_temp.shape[0] < n:
-        raise AttributeError('{} n is too high'.format(n))
+        if Constants.DEBUG:
+            msg = '{} n is too high'.format(n)
+            raise_(AttributeError, AttributeError(msg))
+        return False, None
 
     if plot_type == 'bar':
         output = lambda: data_temp.head(n=n)
-        jwrap = json_wrap(override=None)
-        return True, jwrap.wrap(functor=output, indent=4)
+        if Constants.DEBUG:
+            import sys
+            jwrap = json_wrap(override=sys.stdout)
+            print(jwrap.wrap(functor=output, indent=4))
+            return True, None
+        else:
+            jwrap = json_wrap(override=None)
+            return True, jwrap.wrap(functor=output, indent=4)
     else:
+        if Constants.DEBUG:
+            msg = 'Mentioned plot type {} is not supported yet'.format(plot_type)
+            raise_(NotImplementedError, NotImplementedError(msg))
         return False, None

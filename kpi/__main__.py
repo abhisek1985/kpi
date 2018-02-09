@@ -1,4 +1,6 @@
 from kpi import dispatch
+from kpi.constants import Constants
+
 
 #
 # if __name__ == '__main__':
@@ -7,13 +9,10 @@ from kpi import dispatch
 
 def main():
     dbuf = dispatch.DBBuffer()
-    print(dbuf['property_analytics'])
-    # from kpi.constants import DEBUG
-    # print(DEBUG)
-    # if DEBUG:
-    #     print(dbuf['property_analytics'])
-    # else:
-    #     print('Debug mode is off')
+    if Constants.DEBUG:
+        print(dbuf['property_analytics'])
+    else:
+        print('Debug mode is off')
 
 if __name__ == '__main__':
     main()

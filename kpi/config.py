@@ -2,7 +2,7 @@
 
 """
 from six.moves import configparser
-import os
+
 
 class ConfigParser:
     """
@@ -44,9 +44,8 @@ class ConfigParser:
                 raise ValueError('Authentication settings to API is not found')
             else:
                 self.logfile = ConfigParser.conf['LOG'].get('log', 'api.log')
-        debug = ConfigParser.conf['DEFAULT'].get('Debug_Mode', 'false')
-        os.environ['DEBUG'] = debug
-        # print(os.environ['DEBUG'])
+
+
 
     @property
     def dbinfo(self):

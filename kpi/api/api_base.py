@@ -11,8 +11,7 @@ unless it is absolutely known.
 from ..dispatch import DBBuffer
 from ..core import preprocess
 from ..IO import buffer_classes
-
-
+from ..constants import Constants
 
 class API(DBBuffer):
     """
@@ -32,6 +31,7 @@ class API(DBBuffer):
         if base not in ['django', 'flask']:
             raise ValueError('Endpoint is not supported yet!!')
 
+__DEBUG__ = Constants.DEBUG
 preprocess = preprocess
 # stdout_wrap = buffer_classes.Overridden(override=sys.stdout)
 json_wrap = buffer_classes.JSONWrap
