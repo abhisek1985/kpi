@@ -13,14 +13,15 @@ __usage__ = "
 """
 
 from .api_base import preprocess
-# from .api_base import API
 from .api_base import json_wrap, dict_wrap
 from ..constants import Constants
 from six import reraise as raise_
 from .api_base import GetData as get_data
 
+API_TABLE_1 = 'property_analytics'
 
-@get_data('property_analytics')
+
+@get_data(API_TABLE_1)
 def number_of_properties(group, category=None, plot_type='heatmap'):
     """
     Finds number of properties for
@@ -31,7 +32,7 @@ def number_of_properties(group, category=None, plot_type='heatmap'):
     :param plot: Plot type for which dataset is generated
     :return: Status and Wrapper subclass type
     """
-    data = get_data.data
+    data = get_data.data[API_TABLE_1]
     if group == 'price_range':
         # First check if the price_range
         # column is already present or not
@@ -89,7 +90,7 @@ def number_of_properties(group, category=None, plot_type='heatmap'):
         return False, None
 
 
-@get_data('property_analytics')
+@get_data(API_TABLE_1)
 def visitor_stats(n, typ, filter_col=None, plot_type='bar'):
     """
     This first filter the data according to the ```filter``` column
@@ -102,7 +103,7 @@ def visitor_stats(n, typ, filter_col=None, plot_type='bar'):
     :param plot_type: Type of the plot
     :return: Status and Wrapper subclass type
     """
-    data = get_data.data
+    data = get_data.data[API_TABLE_1]
     data_temp = None
     if filter_col and len(filter_col) == 2:
         try:
@@ -188,7 +189,7 @@ def visitor_stats(n, typ, filter_col=None, plot_type='bar'):
     # jwrap = json_wrap(override=sys.stdout)
 
 
-@get_data('property_analytics')
+@get_data(API_TABLE_1)
 def property_price_stats(percents, plot_type='bar'):
     """
     This calculates the percentages of the properties
@@ -206,7 +207,7 @@ def property_price_stats(percents, plot_type='bar'):
     :param percents: percentage values -> list
     :param plot_type: Plot type -> str
     """
-    data = get_data.data
+    data = get_data.data[API_TABLE_1]
     if len(percents) < 2:
         if Constants.DEBUG:
             msg = 'Minimum 2 percentages should be given'
@@ -252,7 +253,7 @@ def property_price_stats(percents, plot_type='bar'):
             return True, None
 
 
-@get_data('property_analytics')
+@get_data(API_TABLE_1)
 def national_price_tally(
         n,
         national_price,
@@ -268,7 +269,7 @@ def national_price_tally(
     :param national_price: The national_price of the location
     :param filter_col: group of values (column and value) -> tuple
     """
-    data = get_data.data
+    data = get_data.data[API_TABLE_1]
 
     # This is to see if below NP or above NP properties are taken
     price_above_na = True
@@ -357,7 +358,7 @@ def national_price_tally(
             return True, None
 
 
-@get_data('property_analytics')
+@get_data(API_TABLE_1)
 def property_discounts(
         n,
         filter_col=None,
@@ -385,7 +386,7 @@ def property_discounts(
     :param focus: Focus for either location or property -> str
     :param plot_type: Plotting type data munging -> str
     """
-    data = get_data.data
+    data = get_data.data[API_TABLE_1]
     if typ not in ['aggregated', 'individual']:
         if Constants.DEBUG:
             msg = '{} type is not implemented yet'.format(typ)

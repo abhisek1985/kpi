@@ -1,4 +1,8 @@
-from .api_base import API
-data = API(base='django')['user_info']
+from .api_base import GetData as get_data
 
-print(data.head())
+API_TABLE_1 = 'user_info'
+
+
+@get_data(API_TABLE_1)
+def test():
+    print(get_data.data[API_TABLE_1].head())

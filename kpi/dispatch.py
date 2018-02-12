@@ -13,12 +13,14 @@ def get_parser_info(database_info):
     dbName = database_info['database']
     user = database_info['user']
     password = database_info['pass']
+    enc = database_info['encryption']
     return MySQL(
         host=host,
         prt=port,
         epass=password,
         dbname=dbName,
-        user=user
+        user=user,
+        encryption=enc
     )
 
 

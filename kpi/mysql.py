@@ -4,14 +4,15 @@ import pandas as pd
 
 class MySQL(Database):
 
-    def __init__(self, user, host, prt, epass, dbname):
+    def __init__(self, user, host, prt, epass, dbname, encryption):
         super(self.__class__, self).__init__(
             dbtype="MySQL",
             user=user,
             host=host,
             prt=prt,
             dbname=dbname,
-            epass=epass
+            epass=epass,
+            enc=encryption
         )
 
     def col_info(self, table):
@@ -37,7 +38,7 @@ class MySQL(Database):
         condition = " WHERE table_schema = "
         clause = "'{}' AND table_name = '{}';".format(self.dbname, table)
         count = select + condition + clause
-        self.cursor.execute("SELECT COUNT(*) FROM {}.{};".format(self.dbname,table))
+        self.cursor.execute("SELECT COUNT(*) FROM {}.{};".format(self.dbname, table))
         n_rows = self.cursor.fetchall()
         self.cursor.execute(count)
         n_cols = self.cursor.fetchall()

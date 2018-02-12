@@ -10,7 +10,7 @@ database related APIs.
 from abc import (ABC, abstractmethod)
 import pymysql
 import sys
-import base64
+from base64 import b64decode
 
 from pymysql.cursors import SSCursor
 
@@ -23,7 +23,7 @@ class Database(ABC):
     basic CRUD functionality in a form of abstract methods.
     """
 
-    def __init__(self, dbtype, user, host, prt, dbname, epass):
+    def __init__(self, dbtype, user, host, prt, dbname, epass, enc):
         """
         Initializer class
         :param dbtype:
@@ -40,12 +40,17 @@ class Database(ABC):
         self.password = epass
 
         try:
-            self.connector = pymysql.connect(host=host,
-                                             user=user,
-                                             passwd=base64.b64decode(epass).decode("utf-8"),
-                                             db=dbname,
-                                             port=prt,
-                                             cursorclass=SSCursor)
+            if enc:
+                password = b64decode(epass).decode("utf-8")
+            else:
+                password = epass
+            self.connector = pymysql.connect(
+                host=host,
+                user=user,
+                passwd=password,
+                db=dbname,
+                port=prt,
+                cursorclass=SSCursor)
         except pymysql.MySQLError as e:
             print('Got error {!r}, errno is {}'.format(e, e.args[0]),
                   file=sys.stderr)

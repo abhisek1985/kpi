@@ -32,7 +32,11 @@ class ConfigParser:
             self.password = ConfigParser.conf['DB'].get('Pass', None)
             self.user = ConfigParser.conf['DB'].get('User', None)
             self.host = ConfigParser.conf['DB'].get('Host', None)
-
+            self.enc = ConfigParser.conf['DB'].get('Encryption', None)
+            if self.enc == 'true':
+                self.enc = True
+            else:
+                self.enc = False
         if ConfigParser.conf['DEFAULT']['Authentication'] == 'true':
             if 'AUTH' not in ConfigParser.conf.sections():
                 raise ValueError('Authentication settings to API is not found')
@@ -44,8 +48,6 @@ class ConfigParser:
                 raise ValueError('Authentication settings to API is not found')
             else:
                 self.logfile = ConfigParser.conf['LOG'].get('log', 'api.log')
-
-
 
     @property
     def dbinfo(self):
@@ -59,7 +61,8 @@ class ConfigParser:
             'database': self.dbName,
             'pass': self.password,
             'user': self.user,
-            'host': self.host
+            'host': self.host,
+            'encryption': self.enc
         }
 
     # @property

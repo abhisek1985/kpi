@@ -27,6 +27,7 @@ class API(DBBuffer):
     be used with the table name to get data.
     Read the documentation of DBBuffer class.
     """
+
     def __init__(self, base):
         super(self.__class__, self).__init__()
         if base not in ['django', 'flask']:
@@ -42,14 +43,22 @@ dict_wrap = buffer_classes.DictWrap
 
 
 class GetData:
-    data = None
+    """
+    Decorator pattern for getting data
+    from a particular table. Loads the
+    if it is not already loaded to the
+    memory. This speeds up the process
+    of data loading but hurts the memory
+    consumption. But who cares for memory.
+    """
+    data = dict()
 
     def __init__(self, table):
         self.table = table
 
     def __call__(self, func):
         def wrapper(*args):
-            if not isinstance(GetData.data, pd.DataFrame):
-                GetData.data = API(base='django')[self.table]
+            if not hasattr(GetData.data, self.table):
+                GetData.data[self.table] = API(base='django')[self.table]
             return func(*args)
         return wrapper
