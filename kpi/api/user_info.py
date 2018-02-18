@@ -1,12 +1,12 @@
-from .api_base import GetData as get_data
-from .api_base import data
+from .api_base import get_data
 
 
 API_TABLE_1 = 'user_info'
 API_TABLE_2 = 'user_info_detailed'
 
+data_user_info = get_data(API_TABLE_1)
+data_user_info_det = get_data(API_TABLE_2)
 
-@get_data(API_TABLE_1)
+
 def test():
-    print(data)
-    # print(data[API_TABLE_1].head())
+    print(data_user_info)

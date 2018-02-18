@@ -3,6 +3,12 @@ from inspect import getfile, currentframe
 ROOT = os.path.dirname(os.path.abspath(getfile(currentframe())))
 BASE = os.path.join(ROOT, '..')
 CONFIG = os.environ.get('CONFIGFILE', os.path.join(BASE, 'config.ini'))
+BUNDLE = os.path.join(ROOT, 'bundle')
+TABLES = [
+    'property_analytics',
+    'user_info',
+    'user_info_detailed'
+]
 
 
 class Constants:

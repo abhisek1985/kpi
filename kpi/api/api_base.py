@@ -11,6 +11,9 @@ unless it is absolutely known.
 from ..dispatch import DBBuffer
 from ..core import preprocess
 from ..IO import buffer_classes
+import bcolz
+from ..constants import BUNDLE
+import os
 # import pandas as pd
 
 
@@ -42,6 +45,10 @@ dict_wrap = buffer_classes.DictWrap
 # excel_wrap = buffer_classes.EXCELWrap(klass='EXCEL')
 
 
+def get_data(table):
+    with bcolz.open(os.path.join(BUNDLE, table), 'r') as ctable:
+        return ctable.todataframe()
+
 # class Data:
 #     data = dict()
 
@@ -51,26 +58,26 @@ dict_wrap = buffer_classes.DictWrap
 #         return Data.data[table]
 
 
-data = dict()
+# data = dict()
 
 
-class GetData:
-    """
-    Decorator pattern for getting data
-    from a particular table. Loads the
-    if it is not already loaded to the
-    memory. This speeds up the process
-    of data loading but hurts the memory
-    consumption. But who cares for memory.
-    """
+# class GetData:
+#     """
+#     Decorator pattern for getting data
+#     from a particular table. Loads the
+#     if it is not already loaded to the
+#     memory. This speeds up the process
+#     of data loading but hurts the memory
+#     consumption. But who cares for memory.
+#     """
 
-    def __init__(self, table):
-        self.table = table
+#     def __init__(self, table):
+#         self.table = table
 
-    def __call__(self, func):
-        def wrapper(*args):
-            if not hasattr(data, self.table):
-                print("Hello")
-                data[self.table] = API(base='django')[self.table]
-            return func(*args)
-        return wrapper
+#     def __call__(self, func):
+#         def wrapper(*args):
+#             if not hasattr(data, self.table):
+#                 print("Hello")
+#                 data[self.table] = API(base='django')[self.table]
+#             return func(*args)
+#         return wrapper
