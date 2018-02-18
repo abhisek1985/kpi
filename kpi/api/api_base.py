@@ -11,7 +11,7 @@ unless it is absolutely known.
 from ..dispatch import DBBuffer
 from ..core import preprocess
 from ..IO import buffer_classes
-import pandas as pd
+# import pandas as pd
 
 
 class API(DBBuffer):
@@ -42,6 +42,18 @@ dict_wrap = buffer_classes.DictWrap
 # excel_wrap = buffer_classes.EXCELWrap(klass='EXCEL')
 
 
+# class Data:
+#     data = dict()
+
+#     def __getitem__(self, table):
+#         if not hasattr(Data.data, table):
+#             Data.data[table] = API(base='django')[self.table]
+#         return Data.data[table]
+
+
+data = dict()
+
+
 class GetData:
     """
     Decorator pattern for getting data
@@ -51,14 +63,14 @@ class GetData:
     of data loading but hurts the memory
     consumption. But who cares for memory.
     """
-    data = dict()
 
     def __init__(self, table):
         self.table = table
 
     def __call__(self, func):
         def wrapper(*args):
-            if not hasattr(GetData.data, self.table):
-                GetData.data[self.table] = API(base='django')[self.table]
+            if not hasattr(data, self.table):
+                print("Hello")
+                data[self.table] = API(base='django')[self.table]
             return func(*args)
         return wrapper
