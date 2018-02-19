@@ -38,7 +38,7 @@ def migrate(overwrite):
     """
     if overwrite:
         # First remove the old bundles
-        shutil.rmtree(BUNDLE)
+        shutil.rmtree(BUNDLE, ignore_errors=True)
         # Create new bundle
         os.makedirs(BUNDLE)
         for each in tqdm.tqdm(TABLES):

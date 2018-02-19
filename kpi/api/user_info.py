@@ -21,7 +21,7 @@ def historical_property_views(
     the target customers mentioned by ```target_group``` and
     aggregate them over timeline mentioned by ```time_aggregation```
 
-    :param filter: group of values (column and value) -> tuple
+    :param filter_col: group of values (column and value) -> tuple
     :param target_group: The group of incoming customers
     :param time_aggregation: How to aggregate the metic over time
     """
@@ -66,6 +66,44 @@ def historical_property_views(
     ret = data_temp.groupby(
         str(time_aggregation) + '_enc').UserID.count().reset_index()
     ret.columns = [str(time_aggregation), 'visits']
+    output = lambda: ret
+    if Constants.DEBUG:
+        import sys
+        jwrap = json_wrap(override=sys.stdout)
+        print(jwrap.wrap(functor=output, indent=4))
+        return True, None
+    else:
+        jwrap = json_wrap(override=None)
+        return True, jwrap.wrap(functor=output, indent=4)
+
+
+def call_to_action(filter_col):
+    data_temp = None
+    data = data_user_info
+    if filter_col and len(filter_col) == 2:
+        try:
+            fc = filter_col[0]
+            fv = filter_col[1]
+            data_temp = data[data[fc] == fv].copy(deep=True)
+        except KeyError:
+            if Constants.DEBUG:
+                msg = 'filter column {} is not present'.format(filter_col[0])
+                raise_(AttributeError, AttributeError(msg))
+            else:
+                return False, None
+    if data_temp is None:
+        data_temp = data.copy(deep=True)
+
+    preprocess.extract_timeseries(
+        data=data_temp,
+        into='month',
+        ts_col='Session_in',
+        encode=True)
+    ret = data_temp.melt(
+        id_vars='month_enc',
+        value_vars=['Emailed', 'Phone', 'IM', 'FaA'],
+        var_name='Action', value_name='times')
+    # return ret
     output = lambda: ret
     if Constants.DEBUG:
         import sys

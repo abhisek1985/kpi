@@ -12,8 +12,9 @@ from ..dispatch import DBBuffer
 from ..core import preprocess
 from ..IO import buffer_classes
 import bcolz
-from ..constants import BUNDLE
+from ..constants import BUNDLE, Constants, CONFIG
 import os
+from ..config import ConfigParser
 # import pandas as pd
 
 
@@ -38,16 +39,21 @@ class API(DBBuffer):
 
 
 preprocess = preprocess
+API(base='django')
 # stdout_wrap = buffer_classes.Overridden(override=sys.stdout)
 json_wrap = buffer_classes.JSONWrap
 dict_wrap = buffer_classes.DictWrap
+
 # csv_wrap = buffer_classes.CSVWrap(klass='CSV')
 # excel_wrap = buffer_classes.EXCELWrap(klass='EXCEL')
 
 
 def get_data(table):
-    with bcolz.open(os.path.join(BUNDLE, table), 'r') as ctable:
-        return ctable.todataframe()
+    try:
+        with bcolz.open(os.path.join(BUNDLE, table), 'r') as ctable:
+            return ctable.todataframe()
+    except FileNotFoundError:
+        pass
 
 # class Data:
 #     data = dict()
