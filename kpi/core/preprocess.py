@@ -2,6 +2,7 @@ import pandas as pd
 from .ops import OPERATIONS
 from math import log10, floor
 import numpy as np
+import pandas as pd
 
 
 def _round_off_10k(num):
@@ -73,3 +74,40 @@ def generic_operations(data, col1, col2, new_col, operation):
     else:
         err_msg = 'Operation {} is not supported yet!!'.format(operation)
         raise NotImplementedError(err_msg)
+
+
+def _encode_month(data):
+    month_table = [
+        None, 'Jan', 'Feb', 'Mar',
+        'Apr', 'May', 'Jun',
+        'Jul', 'Aug', 'Sept',
+        'Oct', 'Nov', 'Dec'
+    ]
+    data['month_enc'] = data.apply(
+        lambda row: month_table[row['month']], axis=1)
+    return True
+
+
+def extract_timeseries(data, into, **kwargs):
+    ts_col = kwargs.get('ts_col')
+    if not ts_col:
+        return False
+
+    data[ts_col] = pd.to_datetime(data[ts_col])
+
+    if into == 'month':
+        data['month'] = data[ts_col].dt.month
+    elif into == 'week':
+        data['week'] = data[ts_col].dt.week
+    elif into == 'quarter':
+        data['quarter'] == data[ts_col].dt.quarter
+    else:
+        return False
+
+    encode = kwargs.get('encode', False)
+    if encode:
+        if into == 'month':
+            return _encode_month(data)
+        elif into == 'quarter':
+            return _encode_q(data)
+    return True
