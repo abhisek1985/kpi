@@ -132,15 +132,27 @@ def historical_user_stats(filter_col, factor):
     if data_temp is None:
         data_temp = data.copy(deep=True)
 
-    print(data_temp)
+    # print(data_temp)
     if factor == 'location':
         ret = data_temp.groupby(
-            'location').PropertyVisitedForBuy.count()
+            'location').PropertyVisitedForBuy.count().reset_index()
     elif factor == 'houses':
-        pass
+        ret = data_temp.groupby(
+            'PropertyVisitedForBuy').UserID.sum().reset_index()
+        ret.columns = ['houses', 'count']
+        # ret.set_index('houses', inplace=True)
+        # print(ret)
     else:
         if Constants.DEBUG:
             err_msg = "The factor {} is not supported".format(factor)
             raise_(NotImplementedError, NotImplementedError(err_msg))
         return False, None
-    return ret
+    output = lambda: ret.set_index(factor)
+    if Constants.DEBUG:
+        import sys
+        jwrap = json_wrap(override=sys.stdout)
+        print(jwrap.wrap(functor=output, indent=4))
+        return True, None
+    else:
+        jwrap = json_wrap(override=None)
+        return True, jwrap.wrap(functor=output, indent=4)
