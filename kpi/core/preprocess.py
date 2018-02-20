@@ -88,6 +88,16 @@ def _encode_month(data):
     return True
 
 
+def _encode_q(data):
+    q_table = [
+        None, 'Quarter 1', 'Quarter 2',
+        'Quarter 3', 'Quarter 4'
+    ]
+    data['quarter_enc'] = data.apply(
+        lambda row: q_table[row['quarter']], axis=1)
+    return True
+
+
 def extract_timeseries(data, into, **kwargs):
     ts_col = kwargs.get('ts_col')
     if not ts_col:
@@ -98,9 +108,9 @@ def extract_timeseries(data, into, **kwargs):
     if into == 'month':
         data['month'] = data[ts_col].dt.month
     elif into == 'week':
-        data['week'] = data[ts_col].dt.week
+        data['week_enc'] = data[ts_col].dt.week
     elif into == 'quarter':
-        data['quarter'] == data[ts_col].dt.quarter
+        data['quarter'] = data[ts_col].dt.quarter
     else:
         return False
 
@@ -109,5 +119,6 @@ def extract_timeseries(data, into, **kwargs):
         if into == 'month':
             return _encode_month(data)
         elif into == 'quarter':
+            # pass
             return _encode_q(data)
     return True
