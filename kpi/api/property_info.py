@@ -178,7 +178,7 @@ def visitor_stats(n, typ, filter_col=None, plot_type='bar'):
     # jwrap = json_wrap(override=fil)
 
     # Return data for API
-    if Constants.DEBUG:
+    if not Constants.DEBUG:
         jwrap = json_wrap(override=None)
         return True, jwrap.wrap(functor=output, indent=4)
     else:
