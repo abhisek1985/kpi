@@ -3,6 +3,7 @@ from .ops import OPERATIONS
 from math import log10, floor
 import numpy as np
 import pandas as pd
+import pandas as pd
 
 
 def _round_off_10k(num):
@@ -122,3 +123,11 @@ def extract_timeseries(data, into, **kwargs):
             # pass
             return _encode_q(data)
     return True
+
+
+def make_frame(data, **kwargs):
+    index = kwargs.get('index')
+    if not index:
+        return pd.DataFrame(data)
+    else:
+        return pd.DataFrame(data, index=index)

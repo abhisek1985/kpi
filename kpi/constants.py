@@ -7,7 +7,9 @@ BUNDLE = os.path.join(ROOT, 'bundle')
 TABLES = [
     'property_analytics',
     'user_info',
-    'user_info_detailed'
+    'user_info_detailed',
+    'property_search',
+    'property_visits'
 ]
 
 
