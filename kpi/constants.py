@@ -9,7 +9,8 @@ TABLES = [
     'user_info',
     'user_info_detailed',
     'property_search',
-    'property_visits'
+    'property_visits',
+    'subscribers'
 ]
 
 

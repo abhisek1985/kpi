@@ -99,12 +99,13 @@ def _encode_q(data):
     return True
 
 
-def extract_timeseries(data, into, **kwargs):
+def extract_timeseries(data, into=None, **kwargs):
     ts_col = kwargs.get('ts_col')
     if not ts_col:
         return False
 
-    data[ts_col] = pd.to_datetime(data[ts_col])
+    if into != 'minutes':
+        data[ts_col] = pd.to_datetime(data[ts_col])
 
     if into == 'month':
         data['month'] = data[ts_col].dt.month
@@ -112,16 +113,19 @@ def extract_timeseries(data, into, **kwargs):
         data['week_enc'] = data[ts_col].dt.week
     elif into == 'quarter':
         data['quarter'] = data[ts_col].dt.quarter
-    else:
+    elif into == 'minutes':
+        data['minutes'] = data[ts_col] / np.timedelta64(1, 'm')
+    elif into:
         return False
 
-    encode = kwargs.get('encode', False)
-    if encode:
-        if into == 'month':
-            return _encode_month(data)
-        elif into == 'quarter':
-            # pass
-            return _encode_q(data)
+    if into and into != 'minutes':
+        encode = kwargs.get('encode', False)
+        if encode:
+            if into == 'month':
+                return _encode_month(data)
+            elif into == 'quarter':
+                # pass
+                return _encode_q(data)
     return True
 
 
