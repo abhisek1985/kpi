@@ -98,7 +98,42 @@ def average_session_length(aggregation=None):
 
 
 def most_popular_pages(page, aggregation):
-    if page not in ['entry', 'exit']:
+    if page not in ['EntryPage', 'ExitPage']:
         if Constants.DEBUG:
-            err_msg = 'Mentioned {} is not known!!'.format(page)
+            err_msg = 'Mentioned page {} is not known!!'.format(page)
             raise_(NotImplementedError, NotImplementedError(err_msg))
+        return False, None
+    if aggregation not in ['average', 'total']:
+        if Constants.DEBUG:
+            err_msg = 'Passed aggregation {} not possible'.format(aggregation)
+        return False, None
+    preprocess.extract_timeseries(
+        data=data_kiss,
+        ts_col='VisitingTimeStart')
+    preprocess.extract_timeseries(
+        data=data_kiss,
+        ts_col='VisitingTimeEnd')
+    preprocess.generic_operations(
+        data=data_kiss,
+        col1='VisitingTimeEnd',
+        col2='VisitingTimeStart',
+        new_col='time_diff',
+        operation='-')
+    preprocess.extract_timeseries(
+        data=data_kiss,
+        into='minutes',
+        ts_col='time_diff')
+    if aggregation == 'total':
+        ret = data_kiss.groupby(page).minutes.sum()
+    else:
+        ret = data_kiss.groupby(page).minutes.mean()
+    ret = ret.reset_index()
+    output = lambda: ret.sort_values(by='minutes', ascending=False)
+    if Constants.DEBUG:
+        import sys
+        jwrap = json_wrap(override=sys.stdout)
+        print(jwrap.wrap(functor=output, indent=4))
+        return True, None
+    else:
+        jwrap = json_wrap(override=None)
+        return True, jwrap.wrap(functor=output, indent=4)
