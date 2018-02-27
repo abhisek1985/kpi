@@ -128,7 +128,8 @@ def most_popular_pages(page, aggregation):
     else:
         ret = data_kiss.groupby(page).minutes.mean()
     ret = ret.reset_index()
-    output = lambda: ret.sort_values(by='minutes', ascending=False)
+    ret.sort_values(by='minutes', ascending=False, inplace=True)
+    output = lambda: ret.set_index(page)
     if Constants.DEBUG:
         import sys
         jwrap = json_wrap(override=sys.stdout)
