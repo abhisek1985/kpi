@@ -2,8 +2,6 @@ import pandas as pd
 from .ops import OPERATIONS
 from math import log10, floor
 import numpy as np
-import pandas as pd
-import pandas as pd
 
 
 def _round_off_10k(num):
@@ -135,3 +133,6 @@ def make_frame(data, **kwargs):
         return pd.DataFrame(data)
     else:
         return pd.DataFrame(data, index=index)
+
+
+concat = lambda x, y: pd.concat([x, y], axis=1)

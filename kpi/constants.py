@@ -10,7 +10,9 @@ TABLES = [
     'user_info_detailed',
     'property_search',
     'property_visits',
-    'subscribers'
+    'subscribers',
+    'page_view_and_scroll',
+    'page_view_and_scroll_details'
 ]
 
 
