@@ -8,9 +8,11 @@ from six import reraise as raise_
 API_TABLE_1 = 'property_visits'
 API_TABLE_2 = 'page_view_and_scroll'
 API_TABLE_3 = 'page_view_and_scroll_details'
+API_TABLE_4 = 'subscribers'
 data_kiss = get_data(API_TABLE_1)
 data_kiss_2 = get_data(API_TABLE_2)
 data_kiss_3 = get_data(API_TABLE_3)
+data_kiss_4 = get_data(API_TABLE_4)
 
 
 def visiting_demography():
@@ -265,4 +267,79 @@ def conversion_path(specifiers=None):
             jwrap = json_wrap(override=None)
             return True, jwrap.wrap(functor=output, indent=4)
     elif specifiers == 'country':
-        pass
+        all_page_views = data_kiss_3.PageViews.unique().tolist()
+        unique_pages = set()
+        for each in all_page_views:
+            unique_pages = {page for page in each.split('|')}
+        up = list(unique_pages)
+        from copy import deepcopy
+        all_path = []
+        show_path = {'country': [], 'path': []}
+        countries = converted_crowd.Visited_from.unique().tolist()
+        paths = converted_crowd.groupby(
+            ['Visited_from', 'PageViews']).VisitedBy.count().reset_index()
+        for each in countries:
+            country_path = paths[paths.Visited_from == each]
+            if country_path.shape[0] != 0:
+                show_path_1 = deepcopy(show_path)
+                path = country_path.sort_values(
+                    by='VisitedBy', ascending=False).iloc[0, 1]
+                show_path_1['country'] = each
+                show_path_1['path'] = path.split('|')
+                all_path.append(show_path_1)
+        ret = preprocess.make_frame(index=countries, columns=up)
+        ret = ret.reset_index()
+        ret = ret.rename(index=str, columns={'index': 'VisitingCountry'})
+        max_pages = len(up)
+        for each in all_path:
+            country = each['country']
+            vpath = each['path']
+            temp_frame = ret[ret.VisitingCountry == country]
+            for index, path in enumerate(vpath):
+                temp_frame[path] = max_pages - index
+            ret[ret.VisitingCountry == country] = temp_frame
+        heatmap_data = preprocess.melt_frame(
+            ret,
+            id_vars='VisitingCountry',
+            value_name='VisitPriority',
+            var_name='page')
+        hdp = heatmap_data.pivot(
+            'VisitingCountry', 'page', 'VisitPriority')
+        output = lambda: hdp[hdp.columns].astype(int)
+        if Constants.DEBUG:
+            import sys
+            jwrap = json_wrap(override=sys.stdout)
+            print(jwrap.wrap(functor=output, indent=4))
+            return True, None
+        else:
+            jwrap = json_wrap(override=None)
+            return True, jwrap.wrap(functor=output, indent=4)
+
+
+def active_users(specifiers=None):
+    online_now = data_kiss_4[data_kiss_4.OnlineNow == 'Y']
+    if not specifiers:
+        online_now_num = online_now.shape[0]
+        active = data_kiss_4[data_kiss_4.AccountDeleted == 'N'].shape[0]
+        online = {
+            'percent_online': online_now_num / active * 100,
+            'total_online': online_now_num}
+        if Constants.DEBUG:
+            print(online)
+            return True, None
+        else:
+            dwrap = dict_wrap(override=None)
+            output = lambda: online
+            return True, dwrap.wrap(functor=output)
+    elif specifiers == 'country':
+        ret = online_now.groupby('Visited_from').OnlineNow.count()
+        ret = ret.reset_index().sort_values(by='OnlineNow', ascending=False)
+        output = lambda: ret.set_index('Visited_from')
+        if Constants.DEBUG:
+            import sys
+            jwrap = json_wrap(override=sys.stdout)
+            print(jwrap.wrap(functor=output, indent=4))
+            return True, None
+        else:
+            jwrap = json_wrap(override=None)
+            return True, jwrap.wrap(functor=output, indent=4)

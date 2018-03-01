@@ -127,12 +127,30 @@ def extract_timeseries(data, into=None, **kwargs):
     return True
 
 
-def make_frame(data, **kwargs):
+def make_frame(data=None, **kwargs):
     index = kwargs.get('index')
-    if not index:
-        return pd.DataFrame(data)
+    columns = kwargs.get('columns')
+    if isinstance(data, dict):
+        df = pd.DataFrame(data)
+        if index:
+            df.index = index
+        if columns:
+            df.columns = columns
+        return df
     else:
-        return pd.DataFrame(data, index=index)
+        if isinstance(index, list) and isinstance(columns, list):
+            return pd.DataFrame(index=index, columns=columns)
+
+
+def melt_frame(data, **kwargs):
+    id_vars = kwargs.get('id_vars')
+    value_name = kwargs.get('value_name')
+    var_name = kwargs.get('var_name')
+    return pd.melt(
+        data,
+        id_vars=id_vars,
+        value_name=value_name,
+        var_name=var_name)
 
 
 concat = lambda x, y: pd.concat([x, y], axis=1)
