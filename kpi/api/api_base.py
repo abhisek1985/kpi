@@ -12,9 +12,9 @@ from ..dispatch import DBBuffer
 from ..core import preprocess
 from ..IO import buffer_classes
 import bcolz
-from ..constants import BUNDLE, Constants, CONFIG
+from ..constants import BUNDLE
 import os
-from ..config import ConfigParser
+# from ..config import ConfigParser
 # import pandas as pd
 
 

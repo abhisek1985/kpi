@@ -12,7 +12,8 @@ TABLES = [
     'property_visits',
     'subscribers',
     'page_view_and_scroll',
-    'page_view_and_scroll_details'
+    'page_view_and_scroll_details',
+    'price_burndown'
 ]
 
 
