@@ -159,6 +159,15 @@ def historical_user_stats(filter_col, factor):
 
 
 def average_search_time(filter_col, time_aggregation, metrics, **kwargs):
+    """
+    This calculates the average search time for different types of
+    metrics in the property search.
+    :param filter_col: As usual
+    :param time_aggregation: time aggregation like month, week, quarter
+    :param metrics: property for renting or property for buying
+    :param kwargs:
+    :return:
+    """
     if time_aggregation not in ['month', 'week', 'quarter']:
         if Constants.DEBUG:
             err_msg = "Aggregate {} is not supported".format(time_aggregation)

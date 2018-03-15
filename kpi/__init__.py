@@ -3,7 +3,8 @@ from .api import (
     user_info,
     search_n_visits,
     kissmetrics,
-    insights)
+    insights
+)
 
 __all__ = [
     property_info,

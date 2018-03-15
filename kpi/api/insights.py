@@ -5,7 +5,7 @@ from .api_base import json_wrap, dict_wrap
 
 API_TABLE_1 = 'price_burndown'
 
-data_invest = get_data(API_TABLE_1).drop('id', axis=1)
+data_invest = get_data(API_TABLE_1)
 
 
 def get_investment_hotspots(location, window, n, typ='N'):
@@ -35,6 +35,7 @@ def get_investment_hotspots(location, window, n, typ='N'):
             err_msg = 'Window value should be in range of 2 to 8'
             raise_(ValueError, ValueError(err_msg))
         return False, None
+    data_invest.drop('id', axis=1, inplace=True)
 
     def _monotonic(row):
         col_list = [
@@ -107,6 +108,7 @@ def slashed_prices(location, n, **kwargs):
             psfp = k / row.Size
             return (psfp[-1] - psfp[-2]) / psfp[-2] * 100
 
+    data_invest.drop('id', axis=1, inplace=True)
     data_loc = data_invest[data_invest.City == location].copy()
     data_loc['percent_increase'] = data_loc.apply(_psft_price_change, axis=1)
     # Properties which are not old enough for discount calculation
@@ -135,6 +137,7 @@ def most_popular(location, n, **kwargs):
     :param location: Location where the properties located
     :param n: Top n count of the properties
     """
+    data_invest.drop('id', axis=1, inplace=True)
     data_loc = data_invest[data_invest.City == location].copy()
     ret = data_loc.sort_values('TotalLikes', ascending=False)
     if ret.shape[0] == 0:
@@ -176,6 +179,8 @@ def great_lifestyles(location, n, **kwargs):
             return k.tolist()[-1] / row['Size']
         else:
             return -1
+
+    data_invest.drop('id', axis=1, inplace=True)
     data_loc = data_invest[data_invest.City == location].copy()
     data_loc['ppsf'] = data_loc.apply(_psft_price_change, axis=1)
     ret = data_loc.sort_values(
