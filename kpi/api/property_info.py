@@ -51,7 +51,7 @@ def number_of_properties(group, category=None, plot_type='heatmap'):
                     print('Create Column operation was not successful')
                 return False, None
     # Check if the category is already present or not
-    else:
+    elif group not in ['price_range', 'property_type']:
         if Constants.DEBUG:
             msg = 'Bad mentioned group {}. Try using price_range'.format(group)
             raise_(ValueError, ValueError(msg))
