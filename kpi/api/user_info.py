@@ -13,13 +13,72 @@ data_user_info_det = get_data(API_TABLE_2)
 
 
 def historical_property_views(
-        filter_col,
         target_group,
-        time_aggregation='month'):
+        time_aggregation='month', 
+        filter_col=None):
     """
     This show count of houses viewed over time from
     the target customers mentioned by ```target_group``` and
     aggregate them over timeline mentioned by ```time_aggregation```
+
+    ~~~~~~~~~~  Examples  ~~~~~~~~~~
+    Currents:
+        # Number of properties viewed each month as Buyer of all visits
+        >>> historical_property_views(target_group='Buyer')
+
+        # Number of properties viewed each week as Buyer of all visits
+        >>> historical_property_views(target_group='Buyer', time_aggregation='week')
+
+        # Number of properties viewed each quarter as Buyer of all visits
+        >>> historical_property_views(target_group='Buyer', time_aggregation='quarter')
+
+        # Number of properties viewed each month as Renter of all visits
+        >>> historical_property_views(target_group='Renter')
+
+        # Number of properties viewed each week as Renter of all visits
+        >>> historical_property_views(target_group='Renter', time_aggregation='week')
+
+        # Number of properties viewed each quarter as Renter of all visits
+        >>> historical_property_views(target_group='Renter', time_aggregation='quarter')
+
+        # Number of properties viewed each month as Renter and Buyer  of all visits
+        >>> historical_property_views(target_group=['Renter', 'Buyer'])
+
+        # Number of properties viewed each week as Renter and Buyer of all visits
+        >>> historical_property_views(target_group=['Renter', 'Buyer'], time_aggregation='week')
+
+        # Number of properties viewed each quarter as Renter and Buyer of all visits
+        >>> historical_property_views(target_group=['Renter', 'Buyer'], time_aggregation='quarter')
+        
+        !
+        # Number of properties viewed each month as Buyer of ```filter_col``` visits
+        >>> historical_property_views(target_group='Buyer', filter_col=('UserID', 1))
+
+        # Number of properties viewed each week as Buyer of ```filter_col``` visits
+        >>> historical_property_views(target_group='Buyer', time_aggregation='week', filter_col=('UserID', 1))
+
+        # Number of properties viewed each quarter as Buyer of ```filter_col``` visits
+        >>> historical_property_views(target_group='Buyer', time_aggregation='quarter', filter_col=('UserID', 1))
+
+        # Number of properties viewed each month as Renter of ```filter_col``` visits
+        >>> historical_property_views(target_group='Renter', filter_col=('UserID', 1))
+
+        # Number of properties viewed each week as Renter of ```filter_col``` visits
+        >>> historical_property_views(target_group='Renter', time_aggregation='week', filter_col=('UserID', 1))
+
+        # Number of properties viewed each quarter as Renter of ```filter_col``` visits
+        >>> historical_property_views(target_group='Renter', time_aggregation='quarter', filter_col=('UserID', 1))
+
+        # Number of properties viewed each month as Renter and Buyer  of ```filter_col``` visits
+        >>> historical_property_views(target_group=['Renter', 'Buyer'], filter_col=('UserID', 1))
+
+        # Number of properties viewed each week as Renter and Buyer of ```filter_col``` visits
+        >>> historical_property_views(target_group=['Renter', 'Buyer'], time_aggregation='week', filter_col=('UserID', 1))
+
+        # Number of properties viewed each quarter as Renter and Buyer of ```filter_col``` visits
+        >>> historical_property_views(target_group=['Renter', 'Buyer'], time_aggregation='quarter', filter_col=('UserID', 1))
+    Mile-stones:
+        >>> for other type of ```cate
 
     :param filter_col: group of values (column and value) -> tuple
     :param target_group: The group of incoming customers
@@ -49,6 +108,8 @@ def historical_property_views(
         data_temp = data.copy(deep=True)
 
     # Apply the target group
+    if not isinstance(target_group, list):
+        target_group = [target_group]
     data_temp = data_temp[data_temp.SearchedAs.isin(target_group)]
     if data_temp.shape[0] == 0:
         if Constants.DEBUG:
@@ -77,7 +138,16 @@ def historical_property_views(
         return True, jwrap.wrap(functor=output, indent=4)
 
 
-def call_to_action(filter_col):
+def call_to_action(filter_col=None):
+    """
+    ~~~~~~~~~~  Examples  ~~~~~~~~~~
+    Currents:
+        # For call to action each month of all the users
+        >>> call_to_action()
+
+        # For call to action each month of a user
+        >>> call_to_action(filter_col=('UserID', 1))
+    """
     data_temp = None
     data = data_user_info
     if filter_col and len(filter_col) == 2:
@@ -103,8 +173,7 @@ def call_to_action(filter_col):
         id_vars='month_enc',
         value_vars=['Emailed', 'Phone', 'IM', 'FaA'],
         var_name='Action', value_name='times')
-    # return ret
-    output = lambda: ret
+    output = lambda: ret.groupby(['month_enc', 'Action']).times.sum().reset_index()
     if Constants.DEBUG:
         import sys
         jwrap = json_wrap(override=sys.stdout)
@@ -115,7 +184,32 @@ def call_to_action(filter_col):
         return True, jwrap.wrap(functor=output, indent=4)
 
 
-def historical_user_stats(filter_col, factor):
+def historical_user_stats(factor, traffic_type, filter_col=None):
+    """
+    # Count of visits by users to a property for Buy of all visits
+    >>> historical_user_stats(factor='houses', traffic_type='PropertyVisitedForBuy')
+
+    # Count of visits by users to a property for Buy of all visits
+    >>> historical_user_stats(factor='houses', traffic_type='PropertyVisitedForRent')
+
+    # Count of visits by users from a location for Buy of all visits
+    >>> historical_user_stats(factor='location', traffic_type='PropertyVisitedForBuy')
+
+    # Count of visits by users from a location for Rent of all visits
+    >>> historical_user_stats(factor='location', traffic_type='PropertyVisitedForRent')
+
+    # Count of visits by users to a property for Buy of ```filter_col``` visits
+    >>> historical_user_stats(factor='houses', traffic_type='PropertyVisitedForBuy', filter_col=('UserID', 3))
+
+    # Count of visits by users to a property for Buy of ```filter_col``` visits
+    >>> historical_user_stats(factor='houses', traffic_type='PropertyVisitedForRent', filter_col=('UserID', 3))
+
+    # Count of visits by users from a location for Buy of ```filter_col``` visits
+    >>> historical_user_stats(factor='location', traffic_type='PropertyVisitedForBuy', filter_col=('UserID', 3))
+
+    # Count of visits by users from a location for Rent of ```filter_col``` visits
+    >>> historical_user_stats(factor='location', traffic_type='PropertyVisitedForRent', filter_col=('UserID', 3))
+    """
     data_temp = None
     data = data_user_info_det
     if filter_col and len(filter_col) == 2:
@@ -135,10 +229,9 @@ def historical_user_stats(filter_col, factor):
     # print(data_temp)
     if factor == 'location':
         ret = data_temp.groupby(
-            'location').PropertyVisitedForBuy.count().reset_index()
+            'location')[traffic_type].count().reset_index()
     elif factor == 'houses':
-        ret = data_temp.groupby(
-            'PropertyVisitedForBuy').UserID.sum().reset_index()
+        ret = data_temp.groupby(traffic_type).UserID.sum().reset_index()
         ret.columns = ['houses', 'count']
         # ret.set_index('houses', inplace=True)
         # print(ret)
@@ -158,10 +251,34 @@ def historical_user_stats(filter_col, factor):
         return True, jwrap.wrap(functor=output, indent=4)
 
 
-def average_search_time(filter_col, time_aggregation, metrics, **kwargs):
+def average_search_time(time_aggregation, metrics, filter_col=None, **kwargs):
     """
     This calculates the average search time for different types of
     metrics in the property search.
+    >>> average_search_time(time_aggregation='month', metrics='PropertyVisitedForBuy')
+    >>> average_search_time(time_aggregation='week', metrics='PropertyVisitedForBuy')
+    >>> average_search_time(time_aggregation='quarter', metrics='PropertyVisitedForBuy')
+
+    >>> average_search_time(time_aggregation='month', metrics='PropertyVisitedForRent')
+    >>> average_search_time(time_aggregation='week', metrics='PropertyVisitedForRent')
+    >>> average_search_time(time_aggregation='quarter', metrics='PropertyVisitedForRent')
+    
+    >>> average_search_time(time_aggregation='month', metrics='PropertyVisitedForBuy', other_agg='location')
+    >>> average_search_time(time_aggregation='week', metrics='PropertyVisitedForBuy', other_agg='location')
+    >>> average_search_time(time_aggregation='quarter', metrics='PropertyVisitedForBuy', other_agg='location')
+
+    >>> average_search_time(time_aggregation='month', metrics='PropertyVisitedForRent', other_agg='location')
+    >>> average_search_time(time_aggregation='week', metrics='PropertyVisitedForRent', other_agg='location')
+    >>> average_search_time(time_aggregation='quarter', metrics='PropertyVisitedForRent', other_agg='location')
+
+    >>> average_search_time(time_aggregation='month', metrics='PropertyVisitedForBuy', other_agg='location', filter_col=('UserID', 1))
+    >>> average_search_time(time_aggregation='week', metrics='PropertyVisitedForBuy', other_agg='location', filter_col=('UserID', 1))
+    >>> average_search_time(time_aggregation='quarter', metrics='PropertyVisitedForBuy', other_agg='location', filter_col=('UserID', 1))
+
+    >>> average_search_time(time_aggregation='month', metrics='PropertyVisitedForRent', other_agg='location', filter_col=('UserID', 1))
+    >>> average_search_time(time_aggregation='week', metrics='PropertyVisitedForRent', other_agg='location', filter_col=('UserID', 1))
+    >>> average_search_time(time_aggregation='quarter', metrics='PropertyVisitedForRent', other_agg='location', filter_col=('UserID', 1))
+
     :param filter_col: As usual
     :param time_aggregation: time aggregation like month, week, quarter
     :param metrics: property for renting or property for buying
