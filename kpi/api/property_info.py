@@ -32,9 +32,16 @@ def number_of_properties(group, category=None, plot_type='heatmap'):
 
     ~~~~~~~~~~  Examples  ~~~~~~~~~~
     Currents:
+        # Properties with different price_range
         >>> number_of_properties(group='price_range')
+
+        # Properties with different property_type
         >>> number_of_properties(group='property_type')
+
+        # Properties with different price_range in different category
         >>> number_of_properties(group='price_range', category='location')
+
+        # Properties with different property_type in different category
         >>> number_of_properties(group='property_type', category='location')
 
     Mile-stones:
@@ -113,6 +120,24 @@ def visitor_stats(n, typ, filter_col=None, plot_type='bar'):
     This first filter the data according to the ```filter``` column
     and then find the individual property statistics of type ```typ```
     for top ```n``` values to yield the plot type of ```plot_type```.
+
+    ~~~~~~~~~~  Examples  ~~~~~~~~~~
+    Currents:
+        # Top n properties in terms of unique visitors of all properties
+        >>> visitor_stats(n, type='unique')
+
+        # Top n properties in terms of total leads generated of all properties
+        >>> visitor_stats(n, type='leads')
+
+        # Top n properties in terms of unique visitors of all properties
+        # for the mentioned filter_col like specific seller or buyer id.
+        >>> visitor_stats(n, type='unique', filter_col=('seller_id', id))
+        >>> visitor_stats(n, type='leads', filter_col=('buyer_id', id))
+
+        NOTE: The exact column name may change for the filter_col
+    Mile-stones:
+        >>> for other type of ```category``` values
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     :param n: number of top values -> int
     :param typ: Type of aggregation (Unique, leads) -> str

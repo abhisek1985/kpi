@@ -11,7 +11,8 @@ from abc import (ABC, abstractmethod)
 import pymysql
 import sys
 from base64 import b64decode
-
+import os
+from .constants import BUNDLE, TABLES
 from pymysql.cursors import SSCursor
 
 
@@ -52,7 +53,13 @@ class Database(ABC):
                 port=prt,
                 cursorclass=SSCursor)
         except pymysql.MySQLError as e:
-            print('Got error {!r}, errno is {}'.format(e, e.args[0]),
+            counter = 0
+            if os.path.exists(BUNDLE):
+                for each in TABLES:
+                    if each in os.listdir(BUNDLE):
+                        counter += 1
+            if counter != len(TABLES):
+                print('GOOT error {!r}, errno is {}'.format(e, e.args[0]),
                   file=sys.stderr)
         else:
             self.cursor = self.connector.cursor()
