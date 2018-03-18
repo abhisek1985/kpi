@@ -1,8 +1,6 @@
 from .mysql import MySQL
 from .config import ConfigParser
-from .constants import CONFIG, Constants, BUNDLE, TABLES
-from pymysql.err import OperationalError
-import os
+from .constants import CONFIG, Constants
 
 
 def parse_config(config_file):

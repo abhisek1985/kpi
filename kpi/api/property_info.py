@@ -135,8 +135,6 @@ def visitor_stats(n, typ, filter_col=None, plot_type='bar'):
         >>> visitor_stats(n, type='leads', filter_col=('buyer_id', id))
 
         NOTE: The exact column name may change for the filter_col
-    Mile-stones:
-        >>> for other type of ```category``` values
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     :param n: number of top values -> int
@@ -188,14 +186,14 @@ def visitor_stats(n, typ, filter_col=None, plot_type='bar'):
         data_temp = data_temp[['id', 'user_taken_action']]
         data_temp.columns = ['property_id', 'user_actions']
 
-    if n > data_temp.shape[0] or n < 0:
-        if Constants.DEBUG:
-            msg = "{} is a invalid number of rows to return".format(n)
-            raise_(ValueError, ValueError(msg))
-        else:
-            return False, None
-    else:
-        data_temp = data_temp.head(n=n)
+    # if n > data_temp.shape[0] or n < 0:
+    #     if Constants.DEBUG:
+    #         msg = "{} is a invalid number of rows to return".format(n)
+    #         raise_(ValueError, ValueError(msg))
+    #     else:
+    #         return False, None
+    # else:
+    data_temp = data_temp.head(n=n)
 
     if data_temp.shape[0] == 0:
         if Constants.DEBUG:
