@@ -29,12 +29,22 @@ def number_of_properties(group, category=None, plot_type='heatmap'):
     Finds number of properties for
     each category grouped by the group
     specified here.
+
+    ~~~~~~~~~~  Examples  ~~~~~~~~~~
+    Currents:
+        >>> number_of_properties(group='price_range')
+        >>> number_of_properties(group='property_type')
+        >>> number_of_properties(group='price_range', category='location')
+        >>> number_of_properties(group='property_type', category='location')
+
+    Mile-stones:
+        >>> for other type of ```category``` values
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     :param group: Feature the group the dataset
     :param category: Split category of the dataset
     :param plot: Plot type for which dataset is generated
     :return: Status and Wrapper subclass type
     """
-#    data = get_data.data[API_TABLE_1]
     if group == 'price_range':
         # First check if the price_range
         # column is already present or not
@@ -56,20 +66,26 @@ def number_of_properties(group, category=None, plot_type='heatmap'):
             msg = 'Bad mentioned group {}. Try using price_range'.format(group)
             raise_(ValueError, ValueError(msg))
         return False, None
-    if category not in data.columns.values:
+    if category and category not in data.columns.values:
         if Constants.DEBUG:
             print('Category column is not present in the table')
         return False, None
 
     # Currently only 'heatmap' is supported
     if plot_type == 'heatmap':
-        searches = data.groupby([group, category]).count().reset_index()
-        search_data = searches.iloc[:, 0:3]
-        search_data.columns = ['Price Range', 'Locations', 'count']
-        output = lambda: search_data.pivot(
-            'Locations',
-            'Price Range',
-            'count').fillna(0).astype(int)
+        if category:
+            searches = data.groupby([group, category]).count().reset_index()
+            search_data = searches.iloc[:, 0:3]
+            search_data.columns = [group, 'Locations', 'count']
+            output = lambda: search_data.pivot(
+                'Locations',
+                group,
+                'count').fillna(0).astype(int)
+        else:
+            searches = data.groupby([group]).count().reset_index()
+            search_data = searches.iloc[:, 0:2]
+            search_data.columns = [group, 'count']
+            output = lambda: search_data.set_index(group)
         # Wrap into a wrapper class and return with status
 
         # Use file to dump the data
@@ -92,7 +108,6 @@ def number_of_properties(group, category=None, plot_type='heatmap'):
         return False, None
 
 
-# @get_data(API_TABLE_1)
 def visitor_stats(n, typ, filter_col=None, plot_type='bar'):
     """
     This first filter the data according to the ```filter``` column
