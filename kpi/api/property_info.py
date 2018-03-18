@@ -143,7 +143,6 @@ def visitor_stats(n, typ, filter_col=None, plot_type='bar'):
     :param plot_type: Type of the plot
     :return: Status and Wrapper subclass type
     """
-#    data = get_data.data[API_TABLE_1]
     data_temp = None
     if filter_col and len(filter_col) == 2:
         try:
@@ -229,7 +228,6 @@ def visitor_stats(n, typ, filter_col=None, plot_type='bar'):
     # jwrap = json_wrap(override=sys.stdout)
 
 
-# @get_data(API_TABLE_1)
 def property_price_stats(percents, plot_type='bar'):
     """
     This calculates the percentages of the properties
@@ -247,7 +245,6 @@ def property_price_stats(percents, plot_type='bar'):
     :param percents: percentage values -> list
     :param plot_type: Plot type -> str
     """
-#    data = get_data.data[API_TABLE_1]
     if len(percents) < 2:
         if Constants.DEBUG:
             msg = 'Minimum 2 percentages should be given'
@@ -293,7 +290,6 @@ def property_price_stats(percents, plot_type='bar'):
             return True, None
 
 
-# @get_data(API_TABLE_1)
 def national_price_tally(
         n,
         national_price,
@@ -303,13 +299,28 @@ def national_price_tally(
     Compares the price of properties to check the top ```n``` above or
     below average prices compared to the national_prices based on the
     filter_type to screen for a filter.
+    
+    ~~~~~~~~~~  Examples  ~~~~~~~~~~
+    Currents:
+        # Top n properties above the NATIONAL PRICE among all properties
+        >>> national_price_tally(n, national_price)
+        
+        # Top n properties below the NATIONAL PRICE among all properties
+        >>> national_price_tally(-n, national_price)
+
+        # Top n properties below the NATIONAL PRICE based on filter_col
+        >>> visitor_stats(-n, national_price, filter_col=('added_by_id', 23))
+        >>> visitor_stats(n, national_price, filter_col=('added_by_id', 23))
+
+        NOTE: The exact column name may change for the filter_col
+        NOTE2: National prices needs to be passed thoughtfully
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     :param plot_type: Plotting type
     :param n: number of properties above or below NP
     :param national_price: The national_price of the location
     :param filter_col: group of values (column and value) -> tuple
     """
-#    data = get_data.data[API_TABLE_1]
 
     # This is to see if below NP or above NP properties are taken
     price_above_na = True
@@ -354,7 +365,6 @@ def national_price_tally(
         ['per_below_above_NA_temp'],
         axis=1,
         inplace=True)
-
     if price_above_na:
         ret_data = data_temp[data_temp['more_than_NA'] == 1]
     else:
@@ -366,39 +376,30 @@ def national_price_tally(
         dwrap = dict_wrap(override=None)
         output = lambda: {}
         return True, dwrap.wrap(functor=output)
+    ascend = not price_above_na
+    ret_data.sort_values(
+        by='per_below_above_NA',
+        inplace=True,
+        ascending=ascend)
+    ret_data = ret_data[['id', 'per_below_above_NA']].head(abs(n))
 
-    if abs(n) > ret_data.shape[0]:
-        if Constants.DEBUG:
-            msg = "{} is a invalid number of rows to return".format(n)
-            raise_(ValueError, ValueError(msg))
-        else:
-            return False, None
+    if plot_type == 'bar':
+        ret_data.set_index('id', inplace=True)
+        output = lambda: ret_data.reset_index(drop=True)
     else:
-        ascend = not price_above_na
-        ret_data.sort_values(
-            by='per_below_above_NA',
-            inplace=True,
-            ascending=ascend)
-        ret_data = ret_data[['id', 'per_below_above_NA']].head(n)
-
-        if plot_type == 'bar':
-            ret_data.set_index('id', inplace=True)
-            output = lambda: ret_data.reset_index(drop=True)
-        else:
-            if Constants.DEBUG:
-                print('Plot type {} is not supported'.format(plot_type))
-            return False, None
-        if not Constants.DEBUG:
-            jwrap = json_wrap(override=None)
-            return True, jwrap.wrap(functor=output, indent=4)
-        else:
-            import sys
-            jwrap = json_wrap(override=sys.stdout)
-            print(jwrap.wrap(functor=output, indent=4))
-            return True, None
+        if Constants.DEBUG:
+            print('Plot type {} is not supported'.format(plot_type))
+        return False, None
+    if not Constants.DEBUG:
+        jwrap = json_wrap(override=None)
+        return True, jwrap.wrap(functor=output, indent=4)
+    else:
+        import sys
+        jwrap = json_wrap(override=sys.stdout)
+        print(jwrap.wrap(functor=output, indent=4))
+        return True, None
 
 
-# @get_data(API_TABLE_1)
 def property_discounts(
         n,
         filter_col=None,
@@ -419,6 +420,29 @@ def property_discounts(
     For focus on location, it can either performed **aggregated** per location
     analysis or **individual** discount oriented analysis as
     mentioned by ```typ```.
+    
+    ~~~~~~~~~~  Examples  ~~~~~~~~~~
+    Currents:
+        # Top n locations based on the discounts of all properties
+        >>> property_discounts(n, focus='location', typ='aggregated')
+        
+        # Top n properties based on the discounts with their location of all properties
+        >>> property_discounts(n, focus='location', typ='individual')
+
+        # Top n properties based on the discounts of all properties
+        >>> property_discounts(n=10, focus='property')
+        
+        # Top n locations based on the discounts of filter_col properties
+        >>> property_discounts(n, focus='location', typ='aggregated', filter_col=('added_by_id', 23))
+
+        # Top n properties based on the discounts with their location of filter_col properties
+        >>> property_discounts(n, focus='location', typ='individual', filter_col=('added_by_id', 23))
+        
+        # Top n properties based on the discounts of all properties
+        >>> property_discounts(n=10, focus='property', filter_col=('added_by_id', 23))
+
+        NOTE: The exact column name may change for the filter_col
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     :param n: Top n values. -> int
     :param filter_col: Filtering criteria -> tuple
@@ -426,7 +450,6 @@ def property_discounts(
     :param focus: Focus for either location or property -> str
     :param plot_type: Plotting type data munging -> str
     """
-#    data = get_data.data[API_TABLE_1]
     if typ not in ['aggregated', 'individual']:
         if Constants.DEBUG:
             msg = '{} type is not implemented yet'.format(typ)
@@ -510,11 +533,11 @@ def property_discounts(
         dwrap = dict_wrap(override=None)
         output = lambda: {}
         return True, dwrap.wrap(functor=output)
-    elif data_temp.shape[0] < n:
-        if Constants.DEBUG:
-            msg = '{} n is too high'.format(n)
-            raise_(AttributeError, AttributeError(msg))
-        return False, None
+    # elif data_temp.shape[0] < n:
+    #     if Constants.DEBUG:
+    #         msg = '{} n is too high'.format(n)
+    #         raise_(AttributeError, AttributeError(msg))
+    #     return False, None
 
     if plot_type == 'bar':
         output = lambda: data_temp.head(n=n)
