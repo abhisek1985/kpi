@@ -131,11 +131,10 @@ def make_frame(data=None, **kwargs):
     index = kwargs.get('index')
     columns = kwargs.get('columns')
     if isinstance(data, dict):
-        df = pd.DataFrame(data)
         if index:
-            df.index = index
-        if columns:
-            df.columns = columns
+            df = pd.DataFrame(data, index=index)
+        else:
+            df = pd.DataFrame(data)
         return df
     else:
         if isinstance(index, list) and isinstance(columns, list):

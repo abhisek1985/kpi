@@ -15,6 +15,27 @@ data_property = get_data(API_TABLE_3)
 
 
 def timely_visits(typ, time_aggregation, filter_col=None):
+    """
+    Section 3: Seller_Analytics
+
+    >>> timely_visits(typ='aggregated', time_aggregation='month')
+    >>> timely_visits(typ='aggregated', time_aggregation='quarter')
+
+    >>> timely_visits(typ='split', time_aggregation='month')
+    >>> timely_visits(typ='split', time_aggregation='quarter')
+
+    >>> timely_visits(typ='aggregated', time_aggregation='month', filter_col=('VisitedBy', 3))
+    >>> timely_visits(typ='aggregated', time_aggregation='quarter', filter_col=('VisitedBy', 3))
+
+    >>> timely_visits(typ='split', time_aggregation='month', filter_col=('VisitedBy', 3))
+    >>> timely_visits(typ='split', time_aggregation='quarter', filter_col=('VisitedBy', 3))
+
+    >>> timely_visits(typ='aggregated', time_aggregation='month', filter_col=('AddedBy', 3))
+    >>> timely_visits(typ='aggregated', time_aggregation='quarter', filter_col=('AddedBy', 3))
+
+    >>> timely_visits(typ='split', time_aggregation='month', filter_col=('AddedBy', 3))
+    >>> timely_visits(typ='split', time_aggregation='quarter', filter_col=('AddedBy', 3))
+    """
     if typ not in ['aggregated', 'split']:
         if Constants.DEBUG:
             err_msg = 'The mentioned typ is not supported!'
@@ -80,7 +101,13 @@ def timely_visits(typ, time_aggregation, filter_col=None):
         dt = OrderedDict(zip(dt.keys(), values))
         ret[each] = dt
     ret = preprocess.make_frame(ret)
-    output = lambda: ret.transpose()[list(dtable.keys())]
+    if typ == 'split':
+        output = lambda: ret.transpose()[list(dtable.keys())]
+    else:
+        ret = ret.mean().reset_index()
+        ret.columns = ['property_id', 'visit_count']
+        output = lambda: ret.set_index('property_id')
+    
     if Constants.DEBUG:
         import sys
         jwrap = json_wrap(override=sys.stdout)
@@ -93,6 +120,18 @@ def timely_visits(typ, time_aggregation, filter_col=None):
 
 
 def past_search_per(what, filter_col=None):
+    """
+    Section 7: Seller Analytics
+    >>> past_search_per('Location')
+    >>> past_search_per('SearchPriceBracket')
+    >>> past_search_per('SearchKeywordsType')
+    >>> past_search_per('SearchKeywordsFeature')
+
+    >> past_search_per('Location', filter_col=('VisitedBy', 3))
+    >>> past_search_per('SearchPriceBracket', filter_col=('VisitedBy', 3))
+    >>> past_search_per('SearchKeywordsType', filter_col=('VisitedBy', 3))
+    >>> past_search_per('SearchKeywordsFeature', filter_col=('VisitedBy', 3))
+    """
     if what not in ['Location',
                     'SearchPriceBracket',
                     'SearchKeywordsType',
@@ -167,7 +206,7 @@ def past_search_per(what, filter_col=None):
 
 def search_quality(what, miss_rate=False):
     if miss_rate:
-        prop_feat_list = data_property['property_features'].apply(
+        prop_feat_list = data_property[what].apply(
             lambda x: x.split('|')).values
         lut = dict(list(zip(data_property.id.values, prop_feat_list)))
         from collections import defaultdict
@@ -202,7 +241,8 @@ def search_quality(what, miss_rate=False):
         ret = preprocess.make_frame(miss_rate, index=index)
         ret = ret.iloc[0].reset_index()
         ret.columns = ['Features', 'Miss Rate']
-        output = lambda: ret.sort_values(by='Miss Rate', ascending=False)
+        output = lambda: ret.sort_values(by='Miss Rate',
+            ascending=False).set_index('Features')
         if Constants.DEBUG:
             import sys
             jwrap = json_wrap(override=sys.stdout)
@@ -211,3 +251,5 @@ def search_quality(what, miss_rate=False):
         else:
             jwrap = json_wrap(override=None)
             return True, jwrap.wrap(functor=output, indent=4)
+    else:
+        pass
