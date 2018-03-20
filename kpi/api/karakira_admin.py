@@ -1,6 +1,7 @@
 from .api_base import get_data
 from .api_base import json_wrap, dict_wrap
 from ..constants import Constants
+from .api_base import preprocess
 from six import reraise as raise_
 
 
@@ -142,21 +143,71 @@ def top_n_agents(n):
         return True, jwrap.wrap(functor=output, indent=4)
 
 
-def cancelled_users(specifiers=None, user_group='*'):
+def cancelled_users(spec1=None, spec2='Location', user_group='*', **kwargs):
     user_groups = [
         '*', 'Buyer', 'Seller', 'Investor',
         'Agent', 'Property_Manager'
-
     ]
-
+    data['Role'] = data.apply(_assign_major_role, axis=1)
     if user_group not in user_groups:
         if Constants.DEBUG:
             err_msg = 'Mentioned user group {} is invalid'.format(user_group)
             raise_(AttributeError, ArithmeticError(err_msg))
         return False, None
     elif user_group != '*':
-        data['Role'] = data.apply(_assign_major_role, axis=1)
-        data_active = data[data.Role == user_group].copy()
+        data_user = data[data.Role == user_group].copy()
     else:
-        data_active = data.copy()                                                                                                                                                                                                                                                                                                                                                                                                         
-    pass
+        data_user = data.copy()
+
+    data_user = data_user[data_user.AccountDeleted == 'Y']
+    if not spec1:
+        ret = data_user.groupby(spec2).AccountDeleted.count()
+        output = lambda: ret.reset_index().set_index(spec2)
+        if Constants.DEBUG:
+            import sys
+            jwrap = json_wrap(override=sys.stdout)
+            print(jwrap.wrap(functor=output, indent=4))
+            return True, None
+        else:
+            jwrap = json_wrap(override=None)
+            return True, jwrap.wrap(functor=output, indent=4)
+    else:
+        if spec1 == 'Role':
+            ret = data_user.groupby([spec2, spec1]).size().reset_index()
+            ret.columns = ['Location', 'Role', 'Cancelled']
+            ret = ret.pivot('Location', 'Role', 'Cancelled')
+            ret.fillna(0, inplace=True)
+            output = lambda: ret.astype(int)
+            if Constants.DEBUG:
+                import sys
+                jwrap = json_wrap(override=sys.stdout)
+                print(jwrap.wrap(functor=output, indent=4))
+                return True, None
+            else:
+                jwrap = json_wrap(override=None)
+                return True, jwrap.wrap(functor=output, indent=4)
+        elif spec1 == 'time':
+            tagg = kwargs.get('time_aggregation', 'month')
+            preprocess.extract_timeseries(
+                data=data_user,
+                ts_col='JoiningDate')
+            preprocess.extract_timeseries(
+                data=data_user,
+                into=tagg,
+                encode=True,
+                ts_col='JoiningDate')
+            ret = data_user.groupby(
+                [spec2, str(tagg) + '_enc']).size().reset_index()
+            cols = ['Location', 'Cancel_' + str(tagg), 'Count']
+            ret.columns = cols
+            ret = ret.pivot('Location', 'Cancel_' + str(tagg), 'Count')
+            ret.fillna(0, inplace=True)
+            output = lambda: ret.astype(int)
+            if Constants.DEBUG:
+                import sys
+                jwrap = json_wrap(override=sys.stdout)
+                print(jwrap.wrap(functor=output, indent=4))
+                return True, None
+            else:
+                jwrap = json_wrap(override=None)
+                return True, jwrap.wrap(functor=output, indent=4)
