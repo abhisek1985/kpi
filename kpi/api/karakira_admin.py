@@ -95,6 +95,53 @@ def active_users(specifiers=None, user_group='*'):
         return False, None
 
 
+def get_online_subscribers(specifier=None):
+    if specifier and specifier not in data.columns.values:
+        if Constants.DEBUG:
+            err_msg = 'Mentioned specifier is not present'
+            raise_(AttributeError, AttributeError(err_msg))
+    if not specifier:
+        ret = data[data.OnlineNow == 'Y'].SubscriberID.unique().tolist()
+        ret = {'online_subscribers': ret}
+        output = lambda: ret
+        if Constants.DEBUG:
+            print(output())
+            return True, None
+        else:
+            dwrap = dict_wrap(override=None)
+            return True, dwrap.wrap(functor=output)
+    else:
+        specifier_subscriber = {}
+        for grp, name in data[data.OnlineNow == 'Y'].groupby(specifier):
+            specifier_subscriber[grp] = name.SubscriberID.unique().tolist()
+        output = lambda: specifier_subscriber
+        if Constants.DEBUG:
+            print(output())
+            return True, None
+        else:
+            dwrap = dict_wrap(override=None)
+            return True, dwrap.wrap(functor=output)
+
+
+def top_n_agents(n):
+    data['Role'] = data.apply(_assign_major_role, axis=1)
+    agents = data[data.Role == 'Agent']
+    agents = agents[agents.AccountDeleted == 'N'].copy()
+    ret = agents.groupby('SubscriberID').AsAgent.mean()
+    ret = ret.reset_index()
+    ret.columns = ['AgentID', 'score']
+    ret = ret.sort_values(by='score', ascending=False).head(n)
+    output = lambda: ret.set_index('AgentID')
+    if Constants.DEBUG:
+        import sys
+        jwrap = json_wrap(override=sys.stdout)
+        print(jwrap.wrap(functor=output, indent=4))
+        return True, None
+    else:
+        jwrap = json_wrap(override=None)
+        return True, jwrap.wrap(functor=output, indent=4)
+
+
 def cancelled_users(specifiers=None, user_group='*'):
     user_groups = [
         '*', 'Buyer', 'Seller', 'Investor',
@@ -111,5 +158,5 @@ def cancelled_users(specifiers=None, user_group='*'):
         data['Role'] = data.apply(_assign_major_role, axis=1)
         data_active = data[data.Role == user_group].copy()
     else:
-        data_active = data.copy()
+        data_active = data.copy()                                                                                                                                                                                                                                                                                                                                                                                                         
     pass

@@ -3,7 +3,8 @@ from .api import (
     user_info,
     search_n_visits,
     kissmetrics,
-    insights
+    insights,
+    karakira_admin
 )
 
 __all__ = [
@@ -11,5 +12,6 @@ __all__ = [
     user_info,
     search_n_visits,
     kissmetrics,
-    insights
+    insights,
+    karakira_admin
 ]
